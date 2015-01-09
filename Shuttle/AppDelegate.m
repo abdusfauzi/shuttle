@@ -342,9 +342,11 @@
         NSString *termTitle = cfg[@"title"];
         //Get the value of setting isNewTab
         NSString *isNewTab = cfg[@"isNewTab"];
+        //Get the value of setting isNewWindow
+        NSString *isNewWindow = cfg[@"isNewWindow"];
         
         //Place data fetched from JSON into into a comma delimited string
-        NSString *menuRepObj = [NSString stringWithFormat:@"%@,%@,%@,%@", menuCmd, termTheme, termTitle, isNewTab];
+        NSString *menuRepObj = [NSString stringWithFormat:@"%@,%@,%@,%@,%@", menuCmd, termTheme, termTitle, isNewTab, isNewWindow];
         
         [menuItem setTitle:cfg[@"name"]];
         [menuItem setRepresentedObject:menuRepObj];
@@ -368,6 +370,8 @@
     NSString *terminalTitle;
     //The value of isNewTab
     NSString *isNewTab;
+    //The value of isNewWindow
+    NSString *isNewWindow;
     
     //if for some reason we get a representedObject with only one item...
     if (objectsFromJSON.count <=1) {
@@ -399,6 +403,13 @@
         }else{
             isNewTab = [objectsFromJSON objectAtIndex:3];
         }
+        //Check if isNewWindow is null
+        if ( [[objectsFromJSON objectAtIndex:4] isEqualToString:@"(null)"]){
+            //false is the (default behavior) and runs all new commands in a new tab.
+            isNewWindow = @"false";
+        }else{
+            isNewWindow = [objectsFromJSON objectAtIndex:4];
+        }
     }
 
     // Check if Url
@@ -408,6 +419,23 @@
         [[NSWorkspace sharedWorkspace] openURL:url];
     }
     else if ( [terminalPref rangeOfString: @"iterm"].location !=NSNotFound ) {
+        if ( [isNewWindow isEqualToString:@"true"] ) {
+            NSAppleScript* iTerm2 = [[NSAppleScript alloc] initWithSource:
+                                     [NSString stringWithFormat:
+                                      @"tell application \"iTerm\" \n"
+                                      @"    set newTerm to (make new terminal) \n"
+                                      @"        tell newTerm \n"
+                                      @"            set newSession to (launch session \"%2$@\") \n"
+                                      @"                tell newSession \n"
+                                      @"                    write text \"%1$@\" \n"
+                                      @"                    set name to \"%3$@\" \n"
+                                      @"                    activate \n"
+                                      @"                end tell \n"
+                                      @"        end tell \n"
+                                      @"end tell \n"
+                                      , escapedObject, terminalTheme, terminalTitle]];
+            [iTerm2 executeAndReturnError:nil];
+        }else{
                 if ( [isNewTab isEqualToString:@"false"] ) {
             NSAppleScript* iTerm2 = [[NSAppleScript alloc] initWithSource:
                                      [NSString stringWithFormat:
@@ -470,8 +498,22 @@
                                     , escapedObject, terminalTheme, terminalTitle]];
         [iTerm2 executeAndReturnError:nil];
         }
+      }
     }
+
     else {
+        if ( [isNewWindow isEqualToString:@"true"] ) {
+            NSAppleScript* terminalapp = [[NSAppleScript alloc] initWithSource:
+                                          [NSString stringWithFormat:
+                                           @"tell application \"Terminal\" \n"
+                                           @"   activate \n"
+                                           @"   set newTerm to do script \"%1$@\" \n"
+                                           @"   set newTerm's current settings to settings set \"%2$@\" \n"
+                                           @"   set custom title of selected tab of front window to \"%3$@\" \n"
+                                           @"end tell \n"
+                                           , escapedObject, terminalTheme, terminalTitle]];
+            [terminalapp executeAndReturnError:nil];
+        }else{
         if ( [isNewTab isEqualToString:@"false"] ) {
             NSAppleScript* terminalapp = [[NSAppleScript alloc] initWithSource:
                                           [NSString stringWithFormat:
@@ -523,8 +565,10 @@
                                        , escapedObject, terminalTheme, terminalTitle]];
         [terminalapp executeAndReturnError:nil];
         }
+        }
     }
 }
+
 
 - (IBAction)showImportPanel:(id)sender {
     NSOpenPanel * openPanelObj	= [NSOpenPanel openPanel];
