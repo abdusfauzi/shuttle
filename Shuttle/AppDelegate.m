@@ -8,6 +8,97 @@
 
 @implementation AppDelegate
 
+- (NSString *)normalizedTerminalPreference:(id)terminalValue {
+    if (![terminalValue isKindOfClass:[NSString class]]) {
+        return @"terminal";
+    }
+    
+    NSString *normalizedTerminal = [[(NSString *)terminalValue lowercaseString]
+                                    stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    
+    if ([normalizedTerminal rangeOfString:@"iterm"].location != NSNotFound) {
+        return @"iterm";
+    }
+    if ([normalizedTerminal rangeOfString:@"warp"].location != NSNotFound) {
+        return @"warp";
+    }
+    if ([normalizedTerminal rangeOfString:@"ghostty"].location != NSNotFound) {
+        return @"ghostty";
+    }
+    if ([normalizedTerminal rangeOfString:@"terminal"].location != NSNotFound) {
+        return @"terminal";
+    }
+    
+    return @"terminal";
+}
+
+- (NSString *)appleScriptEscapedString:(NSString *)value {
+    if (value == nil) {
+        return @"";
+    }
+    
+    NSString *escapedValue = [value stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+    escapedValue = [escapedValue stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    escapedValue = [escapedValue stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
+    
+    return escapedValue;
+}
+
+- (void)runCommandInUIControlledTerminal:(NSString *)terminalName command:(NSString *)command terminalWindow:(NSString *)terminalWindow {
+    NSString *escapedCommand = [self appleScriptEscapedString:command];
+    NSString *escapedTerminalName = [self appleScriptEscapedString:terminalName];
+    NSString *escapedTerminalWindow = [self appleScriptEscapedString:terminalWindow];
+    
+    NSString *scriptSource = [NSString stringWithFormat:
+                              @"set wasRunning to application \"%@\" is running\n"
+                              @"tell application \"%@\" to activate\n"
+                              @"delay 0.2\n"
+                              @"tell application \"System Events\"\n"
+                              @"\ttell process \"%@\"\n"
+                              @"\t\tif \"%@\" is \"new\" then\n"
+                              @"\t\t\tkeystroke \"n\" using {command down}\n"
+                              @"\t\t\tdelay 0.1\n"
+                              @"\t\telse if \"%@\" is \"tab\" then\n"
+                              @"\t\t\tif wasRunning then\n"
+                              @"\t\t\t\tkeystroke \"t\" using {command down}\n"
+                              @"\t\t\t\tdelay 0.1\n"
+                              @"\t\t\tend if\n"
+                              @"\t\tend if\n"
+                              @"\t\tkeystroke \"%@\"\n"
+                              @"\t\tkey code 36\n"
+                              @"\tend tell\n"
+                              @"end tell",
+                              escapedTerminalName,
+                              escapedTerminalName,
+                              escapedTerminalName,
+                              escapedTerminalWindow,
+                              escapedTerminalWindow,
+                              escapedCommand];
+    
+    NSDictionary *scriptError = nil;
+    NSAppleScript *appleScript = [[NSAppleScript alloc] initWithSource:scriptSource];
+    [appleScript executeAndReturnError:&scriptError];
+    
+    if (scriptError != nil) {
+        NSString *errorMessage = [NSString stringWithFormat:@"Unable to run command in %@.", terminalName];
+        NSString *errorInfo = scriptError[NSAppleScriptErrorMessage] ?: NSLocalizedString(@"Please verify macOS automation/accessibility permissions for the selected terminal.", nil);
+        [self throwError:errorMessage additionalInfo:errorInfo continueOnErrorOption:NO];
+    }
+}
+
+- (void)runCommandInGhostty:(NSString *)command {
+    @try {
+        NSTask *openTask = [[NSTask alloc] init];
+        [openTask setLaunchPath:@"/usr/bin/open"];
+        [openTask setArguments:@[@"-na", @"Ghostty.app", @"--args", @"-e", command]];
+        [openTask launch];
+    } @catch (NSException *exception) {
+        NSString *errorMessage = @"Unable to launch Ghostty.";
+        NSString *errorInfo = exception.reason ?: NSLocalizedString(@"Failed to pass command to Ghostty.", nil);
+        [self throwError:errorMessage additionalInfo:errorInfo continueOnErrorOption:NO];
+    }
+}
+
 - (void) awakeFromNib {
     
     // The location for the JSON path file. This is a simple file that contains the hard path to the *.json settings file.
@@ -208,7 +299,7 @@
         return;
     }
     
-    terminalPref = [json[@"terminal"] lowercaseString];
+    terminalPref = [self normalizedTerminalPreference:json[@"terminal"]];
     editorPref = [json[@"editor"] lowercaseString];
     iTermVersionPref = [json[@"iTerm_version"] lowercaseString];
     openInPref = [json[@"open_in"] lowercaseString];
@@ -450,9 +541,9 @@
     //if terminalTheme is not set then check for a global setting.
     if( [[objectsFromJSON objectAtIndex:1] isEqualToString:@"(null)"] ){
         if(themePref == 0) {
-            if( [terminalPref isEqualToString:@"iterm"] ){
+            if( [terminalPref isEqualToString:@"iterm"] || [terminalPref isEqualToString:@"warp"] || [terminalPref isEqualToString:@"ghostty"] ){
                 //we have no global theme and there is no theme in the command settings.
-                //Forcing the Default profile for iTerm and the basic profile for Terminal.app
+                //Forcing the Default profile for non-Terminal.app terminals.
                 terminalTheme = @"Default";
             }else{
                 terminalTheme = @"basic";
@@ -532,7 +623,7 @@
             
         }
     //If the JSON file is set to use iTerm
-    else if ( [terminalPref rangeOfString: @"iterm"].location !=NSNotFound ) {
+    else if ( [terminalPref isEqualToString:@"iterm"] ) {
         
         //If the JSON prefs for iTermVersion are not stable or nightly throw an error
         if( ![iTermVersionPref isEqualToString: @"stable"] && ![iTermVersionPref isEqualToString:@"nightly"] ) {
@@ -588,6 +679,24 @@
             if ( [terminalWindow isEqualToString:@"virtual"] ) {
                 [self runScript:terminalVirtualWithScreen handler:handlerName parameters:passParameters];
             }
+        }
+    }
+    //If JSON settings are set to use Warp
+    else if ( [terminalPref isEqualToString:@"warp"] ) {
+        //don't spawn a terminal run the command in the background using screen
+        if ( [terminalWindow isEqualToString:@"virtual"] ) {
+            [self runScript:terminalVirtualWithScreen handler:handlerName parameters:passParameters];
+        } else {
+            [self runCommandInUIControlledTerminal:@"Warp" command:escapedObject terminalWindow:terminalWindow];
+        }
+    }
+    //If JSON settings are set to use Ghostty
+    else if ( [terminalPref isEqualToString:@"ghostty"] ) {
+        //don't spawn a terminal run the command in the background using screen
+        if ( [terminalWindow isEqualToString:@"virtual"] ) {
+            [self runScript:terminalVirtualWithScreen handler:handlerName parameters:passParameters];
+        } else {
+            [self runCommandInGhostty:escapedObject];
         }
     }
     //If JSON settings are set to use Terminal.app

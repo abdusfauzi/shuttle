@@ -23,7 +23,7 @@
     
     //Global settings Pref in the JSON file.
     NSString *shuttleJSONPathPref; //Alternate path the JSON file
-    NSString *terminalPref; //Which terminal will we be using iTerm or Terminal.app
+    NSString *terminalPref; //Which terminal will we be using: iTerm, Terminal.app, Warp, or Ghostty
     NSString *editorPref; //What app opens the JSON file vi, nano...
     NSString *iTermVersionPref; //Which version of iTerm nightly or stable
     NSString *openInPref; //By default are commands opened in tabs or new windows.

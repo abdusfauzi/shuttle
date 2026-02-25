@@ -1,66 +1,71 @@
 # Shuttle
 
-[![Join the chat at https://gitter.im/fitztrev/shuttle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fitztrev/shuttle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+A menu bar SSH launcher for macOS.
 
-A simple SSH shortcut menu for macOS
+Shuttle loads hosts from JSON and SSH config files, then opens commands in your configured terminal.
 
-[http://fitztrev.github.io/shuttle/](http://fitztrev.github.io/shuttle/)
+## Project Status
 
-![How Shuttle works](https://raw.githubusercontent.com/fitztrev/shuttle/gh-pages/images/how-shuttle-works.gif)
+This repository is actively being modernized.
 
-**Sidenote**: *Many people ask, so here's how I have [my terminal setup](https://github.com/fitztrev/shuttle/wiki/My-Terminal-Prompt).*
+- Platform target is now macOS `10.13+`.
+- Terminal support has been expanded and normalized.
+- Migration to fully native Swift is in progress (currently mixed Swift + Objective-C).
+- Full migration and operational documentation now lives under [`docs/`](./docs/).
 
-## Installation
+## What Changed
 
-1. Download [Shuttle](http://fitztrev.github.io/shuttle/)
-2. Copy to Applications
+### New and Updated Terminal Support
+- `Terminal.app` (native macOS Terminal)
+- `iTerm` (stable and nightly modes)
+- `Warp`
+- `Ghostty`
 
-## Help
-See the [Wiki](https://github.com/fitztrev/shuttle/wiki) pages. 
+### Migration Direction
+- Primary app flow is moving into Swift.
+- Objective-C components are being retired in phases.
+- Backward compatibility for existing `~/.shuttle.json` config is preserved during migration.
 
-## Roadmap
+### Documentation Overhaul
+A full documentation set has been added to support implementation and migration work:
 
-* Cloud hosting integration
-  * AWS, Rackspace, Digital Ocean, etc
-  * Using their APIs, automatically add all of your machines to the menu
-* Preferences panel for easier configuration
-* Update notifications
-* Keyboard hotkeys
-  * Open menu
-  * Select host option within menu
+- Start here: [`docs/00-getting-started.md`](./docs/00-getting-started.md)
+- Index: [`docs/README.md`](./docs/README.md)
+- Migration plan: [`docs/08-implementation-phases.md`](./docs/08-implementation-phases.md)
+- Testing matrix: [`docs/10-testing.md`](./docs/10-testing.md)
+- Planning backlog: [`docs/plans/task-backlog.md`](./docs/plans/task-backlog.md)
 
-## Contributors
+## Config Notes
 
-This project was created by [Trevor Fitzgerald](https://github.com/fitztrev). I owe many thanks to the following people who have helped make Shuttle even better.
+Key config fields in `~/.shuttle.json`:
 
-(In alphabetical order)
+- `terminal`: `Terminal.app`, `Terminal`, `iTerm`, `Warp`, `Ghostty`
+- `iTerm_version`: `stable` or `nightly`
+- `open_in`: `new`, `tab`, `current`, `virtual`
+- `show_ssh_config_hosts`: `true`/`false`
 
-* [Alexis NIVON](https://github.com/anivon)
-* [Alex Carter](https://github.com/blazeworx)
-* [bihicheng](https://github.com/bihicheng)
-* [Dave Eddy](https://github.com/bahamas10)
-* [Dmitry Filimonov](https://github.com/petethepig)
-* [Frank Enderle](https://github.com/fenderle)
-* [Jack Weeden](https://github.com/jackbot)
-* [Justin Swanson](https://github.com/geeksunny)
-* [Kees Fransen](https://github.com/keesfransen)
-* Marco Aurélio
-* [Martin Grund](https://github.com/grundprinzip)
-* [Matt Turner](https://github.com/thshdw)
-* [Michael Davis](https://github.com/mpdavis)
-* [Morton Fox](https://github.com/mortonfox)
-* [Pluwen](https://github.com/pluwen)
-* Rebecca Dominguez
-* [Rui Rodrigues](https://github.com/rmrodrigues)
-* [Ryan Cohen](https://github.com/imryan)
-* [Stefan Jansen](https://github.com/steffex)
-* Thomas Rosenstein
-* [Thoro](https://github.com/Thoro)
-* [Tibor Bödecs](https://github.com/tib)
-* [welsonla](https://github.com/welsonla)
+Default reference config is available at [`Shuttle/shuttle.default.json`](./Shuttle/shuttle.default.json).
+
+## Build From Source
+
+```bash
+xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Debug -sdk macosx -derivedDataPath /tmp/ShuttleDerivedData build
+```
+
+Notes:
+- In restricted environments, use `-derivedDataPath` (as shown) to avoid permission issues with default Xcode paths.
+- Terminal automation may require Apple Events and Accessibility permissions.
+
+## Repository Layout
+
+- [`Shuttle/`](./Shuttle/) - App source, resources, plist, entitlements
+- [`Shuttle.xcodeproj/`](./Shuttle.xcodeproj/) - Xcode project
+- [`apple-scripts/`](./apple-scripts/) - AppleScript source and compile helpers
+- [`tests/`](./tests/) - Sample config/test fixtures
+- [`docs/`](./docs/) - Core and operational documentation
 
 ## Credits
 
-Shuttle was inspired by [SSHMenu](http://sshmenu.sourceforge.net/), the GNOME applet for Linux.
+Original project by [Trevor Fitzgerald](https://github.com/fitztrev).
 
-I also looked to projects such as [MLBMenu](https://github.com/markolson/MLB-Menu) and [QuickSmileText](https://github.com/scturtle/QuickSmileText) for direction on building a Cocoa app for the status bar.
+Inspired by [SSHMenu](http://sshmenu.sourceforge.net/).

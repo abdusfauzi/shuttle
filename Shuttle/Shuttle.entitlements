@@ -4,8 +4,11 @@
 <dict>
 	<key>com.apple.security.temporary-exception.apple-events</key>
 	<array>
+		<string>com.apple.Terminal</string>
 		<string>com.apple.terminal</string>
 		<string>com.googlecode.iterm2</string>
+		<string>dev.warp.Warp-Stable</string>
+		<string>com.mitchellh.ghostty</string>
 	</array>
 </dict>
 </plist>
