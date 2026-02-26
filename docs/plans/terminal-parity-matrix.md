@@ -47,3 +47,14 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 - Preflight: `pass` (resources + routing markers present)
 - App presence: `Terminal.app`, `iTerm.app`, `Warp.app`, `Ghostty.app` detected
 - Outcome: `READY_FOR_MANUAL_MATRIX`
+
+## Latest Smoke Attempt (2026-02-26, Sandbox)
+- Command: `./tests/terminal_parity_smoke.sh`
+- macOS: `26.3`
+- Preflight checks: `pass`
+- AppleScript handler invocation checks: `pass` (`rc=0` for Terminal/iTerm/virtual script dispatch)
+- GUI capability checks: `fail`
+  - `osascript 'tell application "Terminal" to activate'` -> `-1728` (`Can’t get application "Terminal"`)
+  - `open -a /System/Applications/Utilities/Terminal.app` -> `-10827` (`kLSNoExecutableErr`)
+- Outcome: `BLOCKED_ENVIRONMENT`
+- Interpretation: this execution environment cannot validate live terminal behavior; matrix cell verdicts remain `pending` until run on an interactive macOS session with Automation/Accessibility permissions.

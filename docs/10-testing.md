@@ -21,6 +21,7 @@ Tracking document:
 Quick preflight:
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
+- `./tests/terminal_parity_smoke.sh`
 
 Current state (2026-02-26):
 - Backend isolation is implemented in `TerminalRouter`; matrix execution is active work for M-004.
