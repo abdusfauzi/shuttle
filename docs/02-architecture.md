@@ -1,11 +1,14 @@
 # 02 - Architecture
 
-## Current Architecture (Transition State)
-- Entry point: `main.m` + `NSApplicationMain`.
-- App lifecycle + menu orchestration: `AppDelegate.swift` (new primary path).
-- Legacy/interop components in Objective-C:
-  - `LaunchAtLoginController.{h,m}`
-  - `AboutWindowController.{h,m}`
+## Current Architecture
+- Entry point: `main.swift` + `NSApplicationMain`.
+- App lifecycle + menu orchestration: `AppDelegate.swift`.
+- Services:
+  - `ConfigService`
+  - `SSHConfigParser`
+  - `MenuBuilder`
+  - `TerminalRouter` + backend strategy implementations
+- Launch-at-login runtime path: `LaunchAtLoginController.swift`.
 - Resources:
   - AppleScript bundles under `Shuttle/apple-scpt/`
   - Default config `Shuttle/shuttle.default.json`
@@ -28,4 +31,4 @@
 ## Design Rules
 - Keep side effects behind small services.
 - Model config and menu entities as typed Swift structs/enums.
-- Keep Objective-C bridging isolated and temporary.
+- Keep runtime paths Swift-native and avoid reintroducing Objective-C bridging dependencies.

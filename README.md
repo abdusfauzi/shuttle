@@ -10,7 +10,7 @@ This repository is actively being modernized.
 
 - Platform target is now macOS `10.13+`.
 - Terminal support has been expanded and normalized.
-- Migration to fully native Swift is in progress (currently mixed Swift + Objective-C).
+- Runtime migration to native Swift is in place for the active build target.
 - Full migration and operational documentation now lives under [`docs/`](./docs/).
 
 ## What Changed
@@ -22,8 +22,8 @@ This repository is actively being modernized.
 - `Ghostty`
 
 ### Migration Direction
-- Primary app flow is moving into Swift.
-- Objective-C components are being retired in phases.
+- Primary app flow is now Swift-native.
+- Objective-C runtime components have been retired from the active target build graph.
 - Backward compatibility for existing `~/.shuttle.json` config is preserved during migration.
 - `AppDelegate.swift` is now orchestration-focused; config/menu/terminal logic has been extracted into Swift services.
 - Terminal dispatch now uses backend strategy routing for easier parity maintenance and future terminal additions.

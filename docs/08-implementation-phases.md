@@ -17,6 +17,7 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 - Core service extraction is in place via `Shuttle/AppServices.swift` (`ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter`).
 - Phase 3 routing refactor is in place: `TerminalRouter` dispatches through terminal-specific backend strategy types for Terminal.app, iTerm, Warp, and Ghostty.
 - Launch-at-login path compiles from `LaunchAtLoginController.swift`; Objective-C app runtime sources and bridging-header build setting are removed from active target configuration.
+- Legacy Objective-C runtime source files and obsolete bridge/prefix headers have been removed from the repository.
 
 ## Phase 0 - Baseline and Stabilize
 - Lock deployment target to 10.13.

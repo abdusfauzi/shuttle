@@ -84,7 +84,6 @@
 		C149EC0215D5214600B1F558 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C149EC0515D5214600B1F558 /* Shuttle-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Shuttle-Info.plist"; sourceTree = "<group>"; };
 		C149EC0715D5214600B1F558 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		C149EC0B15D5214600B1F558 /* Shuttle-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Shuttle-Prefix.pch"; sourceTree = "<group>"; };
 		C149EC0D15D5214600B1F558 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
 		C159DC2715D5DE7F00F5DE24 /* shuttle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = shuttle.icns; path = ../shuttle.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -190,7 +189,6 @@
 					C149EC0515D5214600B1F558 /* Shuttle-Info.plist */,
 					C149EC0615D5214600B1F558 /* InfoPlist.strings */,
 					D1A000500000000000000002 /* main.swift */,
-					C149EC0B15D5214600B1F558 /* Shuttle-Prefix.pch */,
 					C149EC0C15D5214600B1F558 /* Credits.rtf */,
 					A1B7B9DF1DB53ED200809327 /* Localizable.strings */,
 			);
