@@ -11,10 +11,10 @@
 		0ADB3B0D178EF8DB004E9BB9 /* StatusIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0ADB3B09178EF8DB004E9BB9 /* StatusIcon.png */; };
 		0ADB3B0E178EF8DB004E9BB9 /* StatusIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0ADB3B0A178EF8DB004E9BB9 /* StatusIcon@2x.png */; };
 		0ADB3B0F178EF8DB004E9BB9 /* StatusIconAlt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0ADB3B0B178EF8DB004E9BB9 /* StatusIconAlt@2x.png */; };
-		0ADB3B13178F3DE4004E9BB9 /* LaunchAtLoginController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ADB3B12178F3DE4004E9BB9 /* LaunchAtLoginController.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		D1A000100000000000000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000100000000000000002 /* AppDelegate.swift */; };
 		D1A000300000000000000001 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000300000000000000002 /* AppServices.swift */; };
 		D1A000400000000000000001 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000400000000000000002 /* LaunchAtLoginController.swift */; };
+		D1A000500000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000500000000000000002 /* main.swift */; };
 		24399FE6219CD0F700C8658F /* virtual-with-screen.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 24399FE5219CD0F700C8658F /* virtual-with-screen.scpt */; };
 		6FC541A31D45CF7F00A896E3 /* AboutWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6FC541A51D45CF7F00A896E3 /* AboutWindowController.xib */; };
 		7E74A7C61789CE2F0079E0D2 /* shuttle.default.json in Resources */ = {isa = PBXBuildFile; fileRef = 7E74A7C51789CE2F0079E0D2 /* shuttle.default.json */; };
@@ -31,9 +31,7 @@
 		D1A000200000000000000001 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000200000000000000002 /* AboutWindowController.swift */; };
 		C149EBFE15D5214600B1F558 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C149EBFD15D5214600B1F558 /* Cocoa.framework */; };
 		C149EC0815D5214600B1F558 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C149EC0615D5214600B1F558 /* InfoPlist.strings */; };
-		C149EC0A15D5214600B1F558 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C149EC0915D5214600B1F558 /* main.m */; };
 		C149EC0E15D5214600B1F558 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = C149EC0C15D5214600B1F558 /* Credits.rtf */; };
-		C149EC1115D5214600B1F558 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C149EC1015D5214600B1F558 /* AppDelegate.m */; };
 		C149EC1415D5214600B1F558 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = C149EC1215D5214600B1F558 /* MainMenu.xib */; };
 		C159DC2815D5DE8000F5DE24 /* shuttle.icns in Resources */ = {isa = PBXBuildFile; fileRef = C159DC2715D5DE7F00F5DE24 /* shuttle.icns */; };
 /* End PBXBuildFile section */
@@ -43,13 +41,11 @@
 		0ADB3B09178EF8DB004E9BB9 /* StatusIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = StatusIcon.png; sourceTree = "<group>"; };
 		0ADB3B0A178EF8DB004E9BB9 /* StatusIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIcon@2x.png"; sourceTree = "<group>"; };
 		0ADB3B0B178EF8DB004E9BB9 /* StatusIconAlt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusIconAlt@2x.png"; sourceTree = "<group>"; };
-		0ADB3B11178F3DE4004E9BB9 /* LaunchAtLoginController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LaunchAtLoginController.h; sourceTree = "<group>"; };
-		0ADB3B12178F3DE4004E9BB9 /* LaunchAtLoginController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LaunchAtLoginController.m; sourceTree = "<group>"; };
 		D1A000100000000000000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D1A000300000000000000002 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		D1A000400000000000000002 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
+		D1A000500000000000000002 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		D1A000200000000000000002 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
-		D1A000100000000000000003 /* Shuttle-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Shuttle-Bridging-Header.h"; sourceTree = "<group>"; };
 		24399FE5219CD0F700C8658F /* virtual-with-screen.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; path = "virtual-with-screen.scpt"; sourceTree = "<group>"; };
 		7E72D21E178003ED00A6389C /* Shuttle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Shuttle.entitlements; sourceTree = "<group>"; };
 		7E74A7C51789CE2F0079E0D2 /* shuttle.default.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = shuttle.default.json; sourceTree = "<group>"; };
@@ -76,8 +72,6 @@
 		A1B7B9F01DB54D8900809327 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AboutWindowController.strings; sourceTree = "<group>"; };
 		A1B7B9F11DB54D8C00809327 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/AboutWindowController.strings"; sourceTree = "<group>"; };
 		A1B7B9F21DB54D9000809327 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/AboutWindowController.strings; sourceTree = "<group>"; };
-		A1D700051A5DCDF4003563E4 /* AboutWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AboutWindowController.h; sourceTree = "<group>"; };
-		A1D700061A5DCE8D003563E4 /* AboutWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = AboutWindowController.m; sourceTree = "<group>"; };
 		BDCFF1521E4E890A00B365C9 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		BDCFF1531E4E890A00B365C9 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/AboutWindowController.strings; sourceTree = "<group>"; };
 		BDCFF1541E4E890A00B365C9 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -90,11 +84,8 @@
 		C149EC0215D5214600B1F558 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C149EC0515D5214600B1F558 /* Shuttle-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Shuttle-Info.plist"; sourceTree = "<group>"; };
 		C149EC0715D5214600B1F558 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		C149EC0915D5214600B1F558 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		C149EC0B15D5214600B1F558 /* Shuttle-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Shuttle-Prefix.pch"; sourceTree = "<group>"; };
 		C149EC0D15D5214600B1F558 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		C149EC0F15D5214600B1F558 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		C149EC1015D5214600B1F558 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C159DC2715D5DE7F00F5DE24 /* shuttle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = shuttle.icns; path = ../shuttle.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -181,18 +172,12 @@
 				7E74A7C51789CE2F0079E0D2 /* shuttle.default.json */,
 				7E72D21E178003ED00A6389C /* Shuttle.entitlements */,
 				C159DC2715D5DE7F00F5DE24 /* shuttle.icns */,
-					0ADB3B11178F3DE4004E9BB9 /* LaunchAtLoginController.h */,
-					0ADB3B12178F3DE4004E9BB9 /* LaunchAtLoginController.m */,
 					D1A000400000000000000002 /* LaunchAtLoginController.swift */,
-					C149EC0F15D5214600B1F558 /* AppDelegate.h */,
 					D1A000100000000000000002 /* AppDelegate.swift */,
 					D1A000300000000000000002 /* AppServices.swift */,
-					C149EC1015D5214600B1F558 /* AppDelegate.m */,
 					C149EC1215D5214600B1F558 /* MainMenu.xib */,
 					0ADB3B10178EF8E2004E9BB9 /* Images */,
 				C149EC0415D5214600B1F558 /* Supporting Files */,
-				A1D700051A5DCDF4003563E4 /* AboutWindowController.h */,
-				A1D700061A5DCE8D003563E4 /* AboutWindowController.m */,
 				D1A000200000000000000002 /* AboutWindowController.swift */,
 				6FC541A51D45CF7F00A896E3 /* AboutWindowController.xib */,
 			);
@@ -204,8 +189,7 @@
 			children = (
 					C149EC0515D5214600B1F558 /* Shuttle-Info.plist */,
 					C149EC0615D5214600B1F558 /* InfoPlist.strings */,
-					C149EC0915D5214600B1F558 /* main.m */,
-					D1A000100000000000000003 /* Shuttle-Bridging-Header.h */,
+					D1A000500000000000000002 /* main.swift */,
 					C149EC0B15D5214600B1F558 /* Shuttle-Prefix.pch */,
 					C149EC0C15D5214600B1F558 /* Credits.rtf */,
 					A1B7B9DF1DB53ED200809327 /* Localizable.strings */,
@@ -301,7 +285,7 @@
 				files = (
 					D1A000400000000000000001 /* LaunchAtLoginController.swift in Sources */,
 					D1A000200000000000000001 /* AboutWindowController.swift in Sources */,
-					C149EC0A15D5214600B1F558 /* main.m in Sources */,
+					D1A000500000000000000001 /* main.swift in Sources */,
 					D1A000100000000000000001 /* AppDelegate.swift in Sources */,
 					D1A000300000000000000001 /* AppServices.swift in Sources */,
 				);
@@ -465,8 +449,6 @@
 				CODE_SIGN_ENTITLEMENTS = Shuttle/Shuttle.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Shuttle/Shuttle-Prefix.pch";
 				INFOPLIST_FILE = "Shuttle/Shuttle-Info.plist";
 					MACOSX_DEPLOYMENT_TARGET = 10.13;
 					PRODUCT_BUNDLE_IDENTIFIER = "shuttle.${PRODUCT_NAME:rfc1034identifier}";
@@ -482,8 +464,6 @@
 				CODE_SIGN_ENTITLEMENTS = Shuttle/Shuttle.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Shuttle/Shuttle-Prefix.pch";
 				INFOPLIST_FILE = "Shuttle/Shuttle-Info.plist";
 					MACOSX_DEPLOYMENT_TARGET = 10.13;
 					PRODUCT_BUNDLE_IDENTIFIER = "shuttle.${PRODUCT_NAME:rfc1034identifier}";

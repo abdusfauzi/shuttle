@@ -10,12 +10,13 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 
 ## Progress Snapshot (2026-02-26)
 - `AppDelegate.swift` compiles as the active app flow.
+- `main.swift` is now the active app entrypoint.
 - Swift/Objective-C bridging compile blockers are resolved.
 - `AboutWindowController` has been ported to Swift and is now compiled from `AboutWindowController.swift`.
 - Project builds successfully with macOS deployment target `10.13`.
 - Core service extraction is in place via `Shuttle/AppServices.swift` (`ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter`).
 - Phase 3 routing refactor is in place: `TerminalRouter` dispatches through terminal-specific backend strategy types for Terminal.app, iTerm, Warp, and Ghostty.
-- Launch-at-login path now compiles from `LaunchAtLoginController.swift`; Objective-C implementation is removed from active sources and the bridging-header build setting is removed.
+- Launch-at-login path compiles from `LaunchAtLoginController.swift`; Objective-C app runtime sources and bridging-header build setting are removed from active target configuration.
 
 ## Phase 0 - Baseline and Stabilize
 - Lock deployment target to 10.13.

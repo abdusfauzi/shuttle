@@ -19,6 +19,6 @@ Deliver Shuttle as a fully Swift macOS app (10.13+) while preserving behavior an
 
 ## Immediate Priorities
 - Keep current terminal behavior stable.
-- Remove Objective-C runtime dependencies incrementally.
+- Complete terminal parity matrix validation across supported terminals and open modes.
 - Replace fragile script execution paths with typed Swift services.
 - Enforce acceptance criteria per migration phase.
