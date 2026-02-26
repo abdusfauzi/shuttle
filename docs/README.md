@@ -42,3 +42,4 @@ This folder tracks the migration of Shuttle to fully native Swift on macOS 10.13
 - Deployment target: macOS 10.13+.
 - Migration state: mixed Objective-C and Swift, moving to full Swift.
 - Terminal routing state: backend strategy isolation implemented in `TerminalRouter`; parity matrix execution in progress.
+- Launch-at-login state: active runtime path is Swift (`LaunchAtLoginController.swift`); legacy Objective-C files are retained only for cleanup/fallback.

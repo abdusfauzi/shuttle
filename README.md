@@ -27,6 +27,7 @@ This repository is actively being modernized.
 - Backward compatibility for existing `~/.shuttle.json` config is preserved during migration.
 - `AppDelegate.swift` is now orchestration-focused; config/menu/terminal logic has been extracted into Swift services.
 - Terminal dispatch now uses backend strategy routing for easier parity maintenance and future terminal additions.
+- Launch-at-login now compiles from `LaunchAtLoginController.swift` (bridging header no longer required by target build settings).
 
 ### Documentation Overhaul
 A full documentation set has been added to support implementation and migration work:

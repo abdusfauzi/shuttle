@@ -29,16 +29,17 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-002 | Extract `ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter` from `AppDelegate.swift` | Phase 2 | done | P0 | unassigned | 2026-03-05 | M-001 | 2026-02-26 | Implemented in `Shuttle/AppServices.swift`, with `AppDelegate.swift` reduced to orchestration and action wiring. |
 | M-003 | Implement terminal backend isolation strategy for Terminal.app, iTerm, Warp, Ghostty, Virtual | Phase 3 | done | P0 | unassigned | 2026-03-12 | M-002 | 2026-02-26 | `TerminalRouter` now dispatches through terminal-specific backend strategy types with centralized mode normalization. |
 | M-004 | Execute full terminal behavior parity matrix across all open modes and supported terminals | Testing | in_progress | P0 | unassigned | 2026-03-14 | M-003 | 2026-02-26 | Backend isolation is complete; run smoke + failure-path matrix from `docs/10-testing.md` and capture outcomes. |
-| M-005 | Retire remaining Objective-C path for launch-at-login and remove bridging header | Phase 4 | todo | P1 | unassigned | 2026-03-19 | M-002, M-003 | 2026-02-25 | Replace `LaunchAtLoginController.{h,m}` with Swift service compatible with macOS 10.13+. |
+| M-005 | Retire remaining Objective-C path for launch-at-login and remove bridging header | Phase 4 | in_progress | P1 | unassigned | 2026-03-19 | M-002, M-003 | 2026-02-26 | Added `LaunchAtLoginController.swift`, removed ObjC launch-at-login from sources, and removed bridging-header build setting; finalize Objective-C cleanup and deprecation strategy. |
 | M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | todo | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-02-25 | Close documentation and changelog gaps and finalize release readiness. |
 
 ## Blockers and Risks
-- `LaunchAtLoginController` still relies on deprecated `LSSharedFileList*` APIs and remains Objective-C.
+- Launch-at-login still relies on deprecated `LSSharedFileList*` APIs (now wrapped in Swift for macOS 10.13 compatibility) and should migrate to ServiceManagement with helper architecture in a future major change.
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
 
 ## Completed Log (Newest First)
 - 2026-02-26: M-003 completed. Isolated terminal dispatch via backend strategy objects in `TerminalRouter` for Terminal.app, iTerm (stable/nightly), Warp, and Ghostty; build validated on macOS `10.13` target.
+- 2026-02-26: M-005 started. Added Swift launch-at-login controller, switched source compilation from Objective-C implementation, and removed active bridging header build settings.
 - 2026-02-26: M-002 completed. Extracted `ConfigService`, `SSHConfigParser`, `MenuBuilder`, and `TerminalRouter` to `Shuttle/AppServices.swift`; build validated on macOS 10.13 target.
 - 2026-02-25: M-001 (Phase 1 baseline) completed. Swift/Objective-C bridging compile blockers resolved; `AppDelegate.swift` compiles and build succeeds on macOS `10.13` target.
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
@@ -49,6 +50,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: Default owner value is `unassigned` until explicit assignment.
 - 2026-02-26: Continue migration with modular service extraction first, then tighten terminal parity behavior as next iteration.
 - 2026-02-26: Terminal routing follows backend strategy objects to reduce branching and keep new terminal integrations isolated from `AppDelegate`.
+- 2026-02-26: Launch-at-login runtime path is now Swift-first; bridging header is no longer required by target build settings.
 
 ## Next Review Checkpoint
 - Date: 2026-03-03

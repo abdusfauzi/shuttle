@@ -4,7 +4,7 @@
 Finish migration to fully Swift code while preserving compatibility and terminal support on macOS 10.13+.
 
 ## Known Blockers (Current)
-- `LaunchAtLoginController` still uses deprecated `LSSharedFileList*` APIs and remains Objective-C.
+- Launch-at-login still uses deprecated `LSSharedFileList*` APIs (now wrapped in Swift for 10.13 compatibility).
 - Terminal behavior parity tests are still pending for full mode matrix (`new/tab/current/virtual`) across all supported terminals.
 - In restricted environments, build may require explicit derived data path.
 
@@ -15,6 +15,7 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 - Project builds successfully with macOS deployment target `10.13`.
 - Core service extraction is in place via `Shuttle/AppServices.swift` (`ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter`).
 - Phase 3 routing refactor is in place: `TerminalRouter` dispatches through terminal-specific backend strategy types for Terminal.app, iTerm, Warp, and Ghostty.
+- Launch-at-login path now compiles from `LaunchAtLoginController.swift`; Objective-C implementation is removed from active sources and the bridging-header build setting is removed.
 
 ## Phase 0 - Baseline and Stabilize
 - Lock deployment target to 10.13.
