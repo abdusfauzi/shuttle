@@ -13,6 +13,7 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 - Swift/Objective-C bridging compile blockers are resolved.
 - `AboutWindowController` has been ported to Swift and is now compiled from `AboutWindowController.swift`.
 - Project builds successfully with macOS deployment target `10.13`.
+- Core service extraction is in place via `Shuttle/AppServices.swift` (`ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter`).
 
 ## Phase 0 - Baseline and Stabilize
 - Lock deployment target to 10.13.

@@ -2,6 +2,7 @@
 
 ## Current Key Files
 - `Shuttle/AppDelegate.swift` (new Swift app logic)
+- `Shuttle/AppServices.swift` (service layer for config, SSH parsing, menu build, terminal routing)
 - `Shuttle/AppDelegate.m` (legacy logic still present)
 - `Shuttle/LaunchAtLoginController.{h,m}`
 - `Shuttle/AboutWindowController.swift` (active Swift implementation)
