@@ -17,6 +17,7 @@
 - `TerminalRouter` -> keep backend-per-terminal isolation and extend via dedicated backend types only.
 - AppleScript compile scripts -> normalized to project-root relative paths (completed).
 - `apple-scripts/iTermStable copy` duplicate source directory -> removed as stale resource (completed).
+- `Shuttle/*/MainMenu.xib` stale Objective-C metadata (`./Classes/AppDelegate.h`) -> updated to Swift source reference (`./AppDelegate.swift`) (completed).
 
 ## File Change Governance
 - One migration phase per pull request.
