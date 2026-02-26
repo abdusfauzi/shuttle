@@ -19,6 +19,7 @@ Tracking document:
 - `docs/plans/terminal-parity-matrix.md`
 
 Quick preflight:
+- `./apple-scripts/compile-all.sh` (run when `.applescript` sources change; requires interactive macOS session, may return `2` in sandbox/headless environments)
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
 - `./tests/terminal_parity_smoke.sh`

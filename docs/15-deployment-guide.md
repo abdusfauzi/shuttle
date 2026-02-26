@@ -2,6 +2,7 @@
 
 ## Pre-Release Checklist
 - Build passes on macOS target.
+- AppleScript resources are up to date (`./apple-scripts/compile-all.sh` run from interactive macOS session when source scripts changed).
 - Entitlements and signing are valid.
 - Terminal matrix smoke tests pass.
 - Migration phase acceptance criteria met.

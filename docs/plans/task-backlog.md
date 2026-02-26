@@ -30,7 +30,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-003 | Implement terminal backend isolation strategy for Terminal.app, iTerm, Warp, Ghostty, Virtual | Phase 3 | done | P0 | unassigned | 2026-03-12 | M-002 | 2026-02-26 | `TerminalRouter` now dispatches through terminal-specific backend strategy types with centralized mode normalization. |
 | M-004 | Execute full terminal behavior parity matrix across all open modes and supported terminals | Testing | in_progress | P0 | unassigned | 2026-03-14 | M-003 | 2026-02-26 | Matrix runbook added at `docs/plans/terminal-parity-matrix.md`; probe + smoke scripts now capture preflight, app presence, and sandbox automation blockers before manual cross-terminal execution. |
 | M-005 | Retire remaining Objective-C path for launch-at-login and remove bridging header | Phase 4 | done | P1 | unassigned | 2026-03-19 | M-002, M-003 | 2026-02-26 | Active target now uses `LaunchAtLoginController.swift` and `main.swift`; Objective-C app/launch sources and bridging header are removed from build graph. |
-| M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | in_progress | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-02-26 | Legacy Objective-C runtime files and old bridging/prefix headers removed from repository; continue with parity completion and release hardening checklist. |
+| M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | in_progress | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-02-26 | Legacy Objective-C runtime files and old bridging/prefix headers removed; AppleScript compile helpers are now root-relative (`./apple-scripts/compile-all.sh`) and stale duplicate script sources are removed. |
 
 ## Blockers and Risks
 - Launch-at-login still relies on deprecated `LSSharedFileList*` APIs (now wrapped in Swift for macOS 10.13 compatibility) and should migrate to ServiceManagement with helper architecture in a future major change.
@@ -38,6 +38,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
 
 ## Completed Log (Newest First)
+- 2026-02-26: Normalized all `apple-scripts/compile-*.sh` helpers to project-root relative paths, added canonical `apple-scripts/compile-all.sh` with explicit blocked-environment signaling (exit `2`), and removed stale duplicate directory `apple-scripts/iTermStable copy`.
 - 2026-02-26: Legacy Objective-C runtime files (`main.m`, `AppDelegate.m/.h`, `LaunchAtLoginController.m/.h`, `AboutWindowController.m/.h`) and obsolete bridge/prefix headers were removed from repository after Swift-only target validation.
 - 2026-02-26: M-005 completed. Active build graph is Swift-only (`main.swift`, `AppDelegate.swift`, services/controllers in Swift); Objective-C app runtime sources are no longer in target sources and bridging header is removed from build settings.
 - 2026-02-26: M-003 completed. Isolated terminal dispatch via backend strategy objects in `TerminalRouter` for Terminal.app, iTerm (stable/nightly), Warp, and Ghostty; build validated on macOS `10.13` target.
@@ -57,6 +58,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-26: Terminal parity execution is tracked in `docs/plans/terminal-parity-matrix.md` with a repeatable preflight check script.
 - 2026-02-26: Added `tests/terminal_parity_probe.sh` and logged first environment probe in the terminal matrix to gate manual parity execution.
 - 2026-02-26: Added `tests/terminal_parity_smoke.sh`; sandbox run confirms automation/GUI launch is blocked (`-1728`, `-10827`), so manual parity matrix remains pending for interactive macOS execution.
+- 2026-02-26: AppleScript compile tooling is root-relative (`./apple-scripts/compile-all.sh`) to avoid workstation-specific path coupling.
 
 ## Next Review Checkpoint
 - Date: 2026-03-03

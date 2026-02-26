@@ -11,11 +11,13 @@ Track behavior parity for command dispatch across supported terminals and open m
 - App builds successfully on current branch.
 - macOS Automation and Accessibility permissions are granted for tested terminal apps.
 - `~/.shuttle.json` has terminal-specific test commands.
+- If `.applescript` sources were changed, run `./apple-scripts/compile-all.sh` first (interactive macOS session required; sandbox/headless returns `2`).
 
 ## Quick Smoke Gate
 Run resource and routing marker check before manual validation:
 
 ```bash
+./apple-scripts/compile-all.sh
 ./tests/terminal_parity_resource_check.sh
 ```
 
@@ -40,6 +42,12 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 ## Execution Notes
 - Record date, macOS version, and terminal version when updating the matrix.
 - For each fail/blocked cell, add the exact error message and reproduction command.
+
+## Latest Script Compile Attempt (2026-02-26, Sandbox)
+- Command: `./apple-scripts/compile-all.sh`
+- Outcome: `BLOCKED_ENVIRONMENT` (exit `2`)
+- Error signal: AppleScript compile services reported `Connection invalid`
+- Interpretation: source script recompilation must be run from an interactive macOS session.
 
 ## Latest Probe (2026-02-26)
 - Command: `./tests/terminal_parity_probe.sh`

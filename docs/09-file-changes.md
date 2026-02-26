@@ -6,6 +6,7 @@
 - `Shuttle/AppServices.swift` (service layer for config, SSH parsing, menu build, terminal routing + backend dispatch strategy)
 - `Shuttle/LaunchAtLoginController.swift` (active Swift launch-at-login implementation)
 - `Shuttle/AboutWindowController.swift` (active Swift implementation)
+- `apple-scripts/compile-all.sh` (canonical AppleScript compile entrypoint)
 - `Shuttle/shuttle.default.json`
 - `Shuttle.xcodeproj/project.pbxproj`
 
@@ -14,6 +15,8 @@
 - `Shuttle-Bridging-Header.h` and prefix header references -> removed from build configuration and repository (completed).
 - `AppDelegate.swift` -> slim orchestration only (completed for current runtime path).
 - `TerminalRouter` -> keep backend-per-terminal isolation and extend via dedicated backend types only.
+- AppleScript compile scripts -> normalized to project-root relative paths (completed).
+- `apple-scripts/iTermStable copy` duplicate source directory -> removed as stale resource (completed).
 
 ## File Change Governance
 - One migration phase per pull request.
