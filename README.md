@@ -62,10 +62,17 @@ If you modify AppleScript sources under `apple-scripts/`, rebuild compiled scrip
 ./apple-scripts/compile-all.sh
 ```
 
+Run the consolidated regression checks with:
+
+```bash
+./tests/regression_suite.sh
+```
+
 Notes:
 - In restricted environments, use `-derivedDataPath` (as shown) to avoid permission issues with default Xcode paths.
 - Terminal automation may require Apple Events and Accessibility permissions.
 - `./apple-scripts/compile-all.sh` expects an interactive macOS session; it returns exit code `2` when AppleScript compile services are unavailable (sandbox/headless).
+- `./tests/regression_suite.sh` returns exit code `2` when interactive automation validation is blocked by the environment.
 
 ## Repository Layout
 

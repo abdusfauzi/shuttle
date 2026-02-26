@@ -23,9 +23,11 @@ Quick preflight:
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
 - `./tests/terminal_parity_smoke.sh`
+- `./tests/regression_suite.sh` (runs preflight + smoke + build; returns `2` if environment blocks GUI automation)
 
 Current state (2026-02-26):
 - Backend isolation is implemented in `TerminalRouter`; matrix execution is active work for M-004.
+- `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and currently returns blocked status in sandboxed runs where GUI automation is unavailable.
 
 ## Failure Path Tests
 - Missing/invalid `iTerm_version` value.

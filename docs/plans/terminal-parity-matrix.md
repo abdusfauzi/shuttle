@@ -49,6 +49,16 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 - Error signal: AppleScript compile services reported `Connection invalid`
 - Interpretation: source script recompilation must be run from an interactive macOS session.
 
+## Latest Regression Suite Attempt (2026-02-26, Sandbox)
+- Commands:
+  - `./tests/regression_suite.sh`
+  - `./tests/regression_suite.sh --with-compile`
+- Build: `pass` (`xcodebuild` succeeded in both runs)
+- Terminal preflight/probe: `pass`
+- Compile step (`--with-compile`): `blocked` (exit `2`, compile services unavailable)
+- Smoke step: `blocked` (`-1728`, `-10827`)
+- Outcome: `REGRESSION_BLOCKED_ENVIRONMENT` (exit `2`)
+
 ## Latest Probe (2026-02-26)
 - Command: `./tests/terminal_parity_probe.sh`
 - macOS: `26.3`

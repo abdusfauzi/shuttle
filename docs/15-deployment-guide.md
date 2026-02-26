@@ -4,7 +4,7 @@
 - Build passes on macOS target.
 - AppleScript resources are up to date (`./apple-scripts/compile-all.sh` run from interactive macOS session when source scripts changed).
 - Entitlements and signing are valid.
-- Terminal matrix smoke tests pass.
+- `./tests/regression_suite.sh` completes with `REGRESSION_PASS` (or `REGRESSION_BLOCKED_ENVIRONMENT` only in known sandbox contexts).
 - Migration phase acceptance criteria met.
 
 ## Release Steps
