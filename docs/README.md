@@ -41,3 +41,4 @@ This folder tracks the migration of Shuttle to fully native Swift on macOS 10.13
 - Terminal targets: Terminal.app, iTerm, Warp, Ghostty.
 - Deployment target: macOS 10.13+.
 - Migration state: mixed Objective-C and Swift, moving to full Swift.
+- Terminal routing state: backend strategy isolation implemented in `TerminalRouter`; parity matrix execution in progress.

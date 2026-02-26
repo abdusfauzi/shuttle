@@ -2,7 +2,7 @@
 
 ## Current Key Files
 - `Shuttle/AppDelegate.swift` (new Swift app logic)
-- `Shuttle/AppServices.swift` (service layer for config, SSH parsing, menu build, terminal routing)
+- `Shuttle/AppServices.swift` (service layer for config, SSH parsing, menu build, terminal routing + backend dispatch strategy)
 - `Shuttle/AppDelegate.m` (legacy logic still present)
 - `Shuttle/LaunchAtLoginController.{h,m}`
 - `Shuttle/AboutWindowController.swift` (active Swift implementation)
@@ -16,7 +16,8 @@
 - `LaunchAtLoginController.{h,m}` -> `LaunchAtLoginService.swift`.
 - `AboutWindowController.{h,m}` -> `AboutWindowController.swift`.
 - `Shuttle-Bridging-Header.h` -> remove once ObjC retirement is complete.
-- `AppDelegate.swift` -> slim orchestration only.
+- `AppDelegate.swift` -> slim orchestration only (completed for current runtime path).
+- `TerminalRouter` -> keep backend-per-terminal isolation and extend via dedicated backend types only.
 
 ## File Change Governance
 - One migration phase per pull request.

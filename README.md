@@ -25,6 +25,8 @@ This repository is actively being modernized.
 - Primary app flow is moving into Swift.
 - Objective-C components are being retired in phases.
 - Backward compatibility for existing `~/.shuttle.json` config is preserved during migration.
+- `AppDelegate.swift` is now orchestration-focused; config/menu/terminal logic has been extracted into Swift services.
+- Terminal dispatch now uses backend strategy routing for easier parity maintenance and future terminal additions.
 
 ### Documentation Overhaul
 A full documentation set has been added to support implementation and migration work:

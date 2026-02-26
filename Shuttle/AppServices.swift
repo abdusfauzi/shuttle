@@ -408,6 +408,214 @@ final class MenuBuilder {
 }
 
 final class TerminalRouter {
+    typealias ErrorHandler = (String, String, Bool) -> Void
+
+    private enum TerminalPreference: String {
+        case terminal
+        case iterm
+        case warp
+        case ghostty
+    }
+
+    private enum OpenMode: String {
+        case new
+        case current
+        case tab
+        case virtual
+    }
+
+    private struct MenuCommand {
+        let command: String
+        let commandTheme: String
+        let commandTitle: String
+        let commandWindow: String
+        let menuFallbackTitle: String
+
+        init?(representedObject: String) {
+            let parts = representedObject.components(separatedBy: "¬_¬")
+            guard parts.count >= 5 else {
+                return nil
+            }
+
+            command = parts[0]
+            commandTheme = parts[1]
+            commandTitle = parts[2]
+            commandWindow = parts[3]
+            menuFallbackTitle = parts[4]
+        }
+    }
+
+    private struct TerminalLaunchRequest {
+        let command: String
+        let theme: String
+        let title: String
+        let mode: OpenMode
+
+        var scriptParameters: [String] {
+            if mode == .virtual {
+                return [command, title]
+            }
+            return [command, theme, title]
+        }
+
+        var launchURL: URL? {
+            if mode == .virtual {
+                return nil
+            }
+            return URL(string: command)
+        }
+    }
+
+    private struct ScriptCatalog {
+        let iTermStableNewWindow: String?
+        let iTermStableCurrentWindow: String?
+        let iTermStableNewTabDefault: String?
+
+        let iTermNightlyNewWindow: String?
+        let iTermNightlyCurrentWindow: String?
+        let iTermNightlyNewTabDefault: String?
+
+        let terminalNewWindow: String?
+        let terminalCurrentWindow: String?
+        let terminalNewTabDefault: String?
+        let terminalVirtualWithScreen: String?
+
+        init(bundle: Bundle = .main) {
+            iTermStableNewWindow = bundle.path(forResource: "iTerm2-stable-new-window", ofType: "scpt")
+            iTermStableCurrentWindow = bundle.path(forResource: "iTerm2-stable-current-window", ofType: "scpt")
+            iTermStableNewTabDefault = bundle.path(forResource: "iTerm2-stable-new-tab-default", ofType: "scpt")
+
+            iTermNightlyNewWindow = bundle.path(forResource: "iTerm2-nightly-new-window", ofType: "scpt")
+            iTermNightlyCurrentWindow = bundle.path(forResource: "iTerm2-nightly-current-window", ofType: "scpt")
+            iTermNightlyNewTabDefault = bundle.path(forResource: "iTerm2-nightly-new-tab-default", ofType: "scpt")
+
+            terminalNewWindow = bundle.path(forResource: "terminal-new-window", ofType: "scpt")
+            terminalCurrentWindow = bundle.path(forResource: "terminal-current-window", ofType: "scpt")
+            terminalNewTabDefault = bundle.path(forResource: "terminal-new-tab-default", ofType: "scpt")
+            terminalVirtualWithScreen = bundle.path(forResource: "virtual-with-screen", ofType: "scpt")
+        }
+
+        func terminalScript(for mode: OpenMode) -> String? {
+            switch mode {
+            case .new:
+                return terminalNewWindow
+            case .current:
+                return terminalCurrentWindow
+            case .tab:
+                return terminalNewTabDefault
+            case .virtual:
+                return terminalVirtualWithScreen
+            }
+        }
+
+        func iTermScript(version: String, mode: OpenMode) -> String? {
+            if mode == .virtual {
+                return terminalVirtualWithScreen
+            }
+
+            if version == "nightly" {
+                switch mode {
+                case .new:
+                    return iTermNightlyNewWindow
+                case .current:
+                    return iTermNightlyCurrentWindow
+                case .tab:
+                    return iTermNightlyNewTabDefault
+                case .virtual:
+                    return terminalVirtualWithScreen
+                }
+            }
+
+            switch mode {
+            case .new:
+                return iTermStableNewWindow
+            case .current:
+                return iTermStableCurrentWindow
+            case .tab:
+                return iTermStableNewTabDefault
+            case .virtual:
+                return terminalVirtualWithScreen
+            }
+        }
+    }
+
+    private struct ExecutionServices {
+        let scripts: ScriptCatalog
+        let handlerName: String
+        let runScript: (_ scriptPath: String?, _ handlerName: String, _ parameters: [String]) -> Void
+        let runUIControlledTerminal: (_ terminalName: String, _ command: String, _ terminalWindow: String, _ errorHandler: ErrorHandler) -> Void
+        let runGhostty: (_ command: String, _ errorHandler: ErrorHandler) -> Void
+    }
+
+    private struct DispatchResult {
+        let updatedITermVersionPref: String?
+    }
+
+    private protocol TerminalBackend {
+        func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult?
+    }
+
+    private struct TerminalAppBackend: TerminalBackend {
+        func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
+            let scriptPath = services.scripts.terminalScript(for: request.mode)
+            services.runScript(scriptPath, services.handlerName, request.scriptParameters)
+            return nil
+        }
+    }
+
+    private struct WarpBackend: TerminalBackend {
+        func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
+            if request.mode == .virtual {
+                services.runScript(services.scripts.terminalVirtualWithScreen, services.handlerName, request.scriptParameters)
+            } else {
+                services.runUIControlledTerminal("Warp", request.command, request.mode.rawValue, errorHandler)
+            }
+            return nil
+        }
+    }
+
+    private struct GhosttyBackend: TerminalBackend {
+        func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
+            if request.mode == .virtual {
+                services.runScript(services.scripts.terminalVirtualWithScreen, services.handlerName, request.scriptParameters)
+            } else {
+                services.runGhostty(request.command, errorHandler)
+            }
+            return nil
+        }
+    }
+
+    private struct ITermBackend: TerminalBackend {
+        let preferredVersion: String?
+
+        func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
+            var resolvedVersion = preferredVersion
+
+            if resolvedVersion != "stable" && resolvedVersion != "nightly" {
+                if resolvedVersion == nil {
+                    let errorMessage = NSLocalizedString("\"iTerm_version\": \"VALUE\", is missing.\n\n\"VALUE\" can be:\n\"stable\" targeting new versions.\n\"nightly\" targeting nightly builds.\n\nPlease fix your shuttle JSON settings.\nSee readme.md on shuttle's github for help.", comment: "")
+                    let errorInfo = NSLocalizedString("Press Continue to try iTerm stable applescripts.\n              -->(not recommended)<--\nThis could fail if you have another version of iTerm installed.\n\nPlease fix the JSON settings.\nPress Quit to exit shuttle.", comment: "")
+                    errorHandler(errorMessage, errorInfo, true)
+                    resolvedVersion = "stable"
+                } else {
+                    let errorMessage = "'\(resolvedVersion ?? "")' " + NSLocalizedString("is not a valid value for iTerm_version. Please fix this in the JSON file", comment: "")
+                    let errorInfo = NSLocalizedString("bad \"iTerm_version\": \"VALUE\" in the JSON settings", comment: "")
+                    errorHandler(errorMessage, errorInfo, false)
+                    return nil
+                }
+            }
+
+            guard let resolvedVersion else {
+                return nil
+            }
+
+            let scriptPath = services.scripts.iTermScript(version: resolvedVersion, mode: request.mode)
+            services.runScript(scriptPath, services.handlerName, request.scriptParameters)
+
+            return DispatchResult(updatedITermVersionPref: resolvedVersion)
+        }
+    }
+
     private var terminalPref = "terminal"
     private(set) var currentITermVersionPref: String?
     private var openInPref = "tab"
@@ -415,165 +623,117 @@ final class TerminalRouter {
 
     func updatePreferences(terminalPref: String, iTermVersionPref: String?, openInPref: String, themePref: String?) {
         self.terminalPref = terminalPref
-        self.currentITermVersionPref = iTermVersionPref
+        currentITermVersionPref = iTermVersionPref
         self.openInPref = openInPref
         self.themePref = themePref
     }
 
-    func openHost(_ representedObject: String, errorHandler: (String, String, Bool) -> Void) {
-        let objectsFromJSON = representedObject.components(separatedBy: "¬_¬")
-        guard objectsFromJSON.count >= 5 else {
+    func openHost(_ representedObject: String, errorHandler: @escaping ErrorHandler) {
+        guard let menuCommand = MenuCommand(representedObject: representedObject) else {
             return
         }
 
-        let escapedObject = objectsFromJSON[0]
-
-        let terminalTheme: String
-        if objectsFromJSON[1] == "(null)" {
-            if themePref == nil {
-                if terminalPref == "iterm" || terminalPref == "warp" || terminalPref == "ghostty" {
-                    terminalTheme = "Default"
-                } else {
-                    terminalTheme = "basic"
-                }
-            } else {
-                terminalTheme = themePref ?? "basic"
-            }
-        } else {
-            terminalTheme = objectsFromJSON[1]
+        guard let openMode = resolvedOpenMode(commandWindow: menuCommand.commandWindow, errorHandler: errorHandler) else {
+            return
         }
 
-        let terminalTitle: String
-        if objectsFromJSON[2] == "(null)" {
-            terminalTitle = objectsFromJSON[4]
-        } else {
-            terminalTitle = objectsFromJSON[2]
-        }
+        let launchRequest = TerminalLaunchRequest(
+            command: menuCommand.command,
+            theme: resolvedTheme(commandTheme: menuCommand.commandTheme),
+            title: resolvedTitle(commandTitle: menuCommand.commandTitle, menuFallbackTitle: menuCommand.menuFallbackTitle),
+            mode: openMode
+        )
 
-        let terminalWindow: String
-        if objectsFromJSON[3] == "(null)" {
-            if openInPref != "tab" && openInPref != "new" {
-                openInPref = "tab"
-            }
-            terminalWindow = openInPref
-        } else {
-            terminalWindow = objectsFromJSON[3]
-            if terminalWindow != "new" && terminalWindow != "current" && terminalWindow != "tab" && terminalWindow != "virtual" {
-                let errorMessage = "'\(terminalWindow)' " + NSLocalizedString("is not a valid value for inTerminal. Please fix this in the JSON file", comment: "")
-                let errorInfo = NSLocalizedString("bad \"inTerminal\":\"VALUE\" in the JSON settings", comment: "")
-                errorHandler(errorMessage, errorInfo, false)
-                return
-            }
-        }
-
-        let iTermStableNewWindow = Bundle.main.path(forResource: "iTerm2-stable-new-window", ofType: "scpt")
-        let iTermStableCurrentWindow = Bundle.main.path(forResource: "iTerm2-stable-current-window", ofType: "scpt")
-        let iTermStableNewTabDefault = Bundle.main.path(forResource: "iTerm2-stable-new-tab-default", ofType: "scpt")
-
-        let iTerm2NightlyNewWindow = Bundle.main.path(forResource: "iTerm2-nightly-new-window", ofType: "scpt")
-        let iTerm2NightlyCurrentWindow = Bundle.main.path(forResource: "iTerm2-nightly-current-window", ofType: "scpt")
-        let iTerm2NightlyNewTabDefault = Bundle.main.path(forResource: "iTerm2-nightly-new-tab-default", ofType: "scpt")
-
-        let terminalNewWindow = Bundle.main.path(forResource: "terminal-new-window", ofType: "scpt")
-        let terminalCurrentWindow = Bundle.main.path(forResource: "terminal-current-window", ofType: "scpt")
-        let terminalNewTabDefault = Bundle.main.path(forResource: "terminal-new-tab-default", ofType: "scpt")
-        let terminalVirtualWithScreen = Bundle.main.path(forResource: "virtual-with-screen", ofType: "scpt")
-
-        let handlerName = "scriptRun"
-
-        let passParameters: [String]
-        let url: URL?
-        if terminalWindow != "virtual" {
-            passParameters = [escapedObject, terminalTheme, terminalTitle]
-            url = URL(string: escapedObject)
-        } else {
-            passParameters = [escapedObject, terminalTitle]
-            url = nil
-        }
-
-        if let url {
+        if let url = launchRequest.launchURL {
             NSWorkspace.shared.open(url)
             return
         }
 
-        if terminalPref == "iterm" {
-            if currentITermVersionPref != "stable" && currentITermVersionPref != "nightly" {
-                if currentITermVersionPref == nil {
-                    let errorMessage = NSLocalizedString("\"iTerm_version\": \"VALUE\", is missing.\n\n\"VALUE\" can be:\n\"stable\" targeting new versions.\n\"nightly\" targeting nightly builds.\n\nPlease fix your shuttle JSON settings.\nSee readme.md on shuttle's github for help.", comment: "")
-                    let errorInfo = NSLocalizedString("Press Continue to try iTerm stable applescripts.\n              -->(not recommended)<--\nThis could fail if you have another version of iTerm installed.\n\nPlease fix the JSON settings.\nPress Quit to exit shuttle.", comment: "")
-                    errorHandler(errorMessage, errorInfo, true)
-                    currentITermVersionPref = "stable"
-                } else {
-                    let errorMessage = "'\(currentITermVersionPref ?? "")' " + NSLocalizedString("is not a valid value for iTerm_version. Please fix this in the JSON file", comment: "")
-                    let errorInfo = NSLocalizedString("bad \"iTerm_version\": \"VALUE\" in the JSON settings", comment: "")
-                    errorHandler(errorMessage, errorInfo, false)
-                    return
-                }
+        let services = makeExecutionServices()
+        let backend = makeBackend(terminalPreference: terminalPreference(), iTermVersionPref: currentITermVersionPref)
+        let result = backend.dispatch(request: launchRequest, services: services, errorHandler: errorHandler)
+        if let updatedVersion = result?.updatedITermVersionPref {
+            currentITermVersionPref = updatedVersion
+        }
+    }
+
+    private func terminalPreference() -> TerminalPreference {
+        TerminalPreference(rawValue: terminalPref) ?? .terminal
+    }
+
+    private func resolvedTheme(commandTheme: String) -> String {
+        if commandTheme != "(null)" {
+            return commandTheme
+        }
+
+        if let themePref {
+            return themePref
+        }
+
+        switch terminalPreference() {
+        case .iterm, .warp, .ghostty:
+            return "Default"
+        case .terminal:
+            return "basic"
+        }
+    }
+
+    private func resolvedTitle(commandTitle: String, menuFallbackTitle: String) -> String {
+        if commandTitle == "(null)" {
+            return menuFallbackTitle
+        }
+        return commandTitle
+    }
+
+    private func resolvedOpenMode(commandWindow: String, errorHandler: ErrorHandler) -> OpenMode? {
+        if commandWindow == "(null)" {
+            let normalizedOpenIn = (openInPref == "new" || openInPref == "tab") ? openInPref : "tab"
+            return OpenMode(rawValue: normalizedOpenIn) ?? .tab
+        }
+
+        if let openMode = OpenMode(rawValue: commandWindow) {
+            return openMode
+        }
+
+        let errorMessage = "'\(commandWindow)' " + NSLocalizedString("is not a valid value for inTerminal. Please fix this in the JSON file", comment: "")
+        let errorInfo = NSLocalizedString("bad \"inTerminal\":\"VALUE\" in the JSON settings", comment: "")
+        errorHandler(errorMessage, errorInfo, false)
+        return nil
+    }
+
+    private func makeBackend(terminalPreference: TerminalPreference, iTermVersionPref: String?) -> TerminalBackend {
+        switch terminalPreference {
+        case .iterm:
+            return ITermBackend(preferredVersion: iTermVersionPref)
+        case .warp:
+            return WarpBackend()
+        case .ghostty:
+            return GhosttyBackend()
+        case .terminal:
+            return TerminalAppBackend()
+        }
+    }
+
+    private func makeExecutionServices() -> ExecutionServices {
+        let scripts = ScriptCatalog()
+        return ExecutionServices(
+            scripts: scripts,
+            handlerName: "scriptRun",
+            runScript: { [weak self] scriptPath, handlerName, parameters in
+                self?.runScript(scriptPath: scriptPath, handler: handlerName, parameters: parameters)
+            },
+            runUIControlledTerminal: { [weak self] terminalName, command, terminalWindow, errorHandler in
+                self?.runCommandInUIControlledTerminal(
+                    terminalName: terminalName,
+                    command: command,
+                    terminalWindow: terminalWindow,
+                    errorHandler: errorHandler
+                )
+            },
+            runGhostty: { [weak self] command, errorHandler in
+                self?.runCommandInGhostty(command: command, errorHandler: errorHandler)
             }
-
-            if currentITermVersionPref == "stable" {
-                if terminalWindow == "new" {
-                    runScript(scriptPath: iTermStableNewWindow, handler: handlerName, parameters: passParameters)
-                }
-                if terminalWindow == "current" {
-                    runScript(scriptPath: iTermStableCurrentWindow, handler: handlerName, parameters: passParameters)
-                }
-                if terminalWindow == "tab" {
-                    runScript(scriptPath: iTermStableNewTabDefault, handler: handlerName, parameters: passParameters)
-                }
-                if terminalWindow == "virtual" {
-                    runScript(scriptPath: terminalVirtualWithScreen, handler: handlerName, parameters: passParameters)
-                }
-            }
-
-            if currentITermVersionPref == "nightly" {
-                if terminalWindow == "new" {
-                    runScript(scriptPath: iTerm2NightlyNewWindow, handler: handlerName, parameters: passParameters)
-                }
-                if terminalWindow == "current" {
-                    runScript(scriptPath: iTerm2NightlyCurrentWindow, handler: handlerName, parameters: passParameters)
-                }
-                if terminalWindow == "tab" {
-                    runScript(scriptPath: iTerm2NightlyNewTabDefault, handler: handlerName, parameters: passParameters)
-                }
-                if terminalWindow == "virtual" {
-                    runScript(scriptPath: terminalVirtualWithScreen, handler: handlerName, parameters: passParameters)
-                }
-            }
-
-            return
-        }
-
-        if terminalPref == "warp" {
-            if terminalWindow == "virtual" {
-                runScript(scriptPath: terminalVirtualWithScreen, handler: handlerName, parameters: passParameters)
-            } else {
-                runCommandInUIControlledTerminal(terminalName: "Warp", command: escapedObject, terminalWindow: terminalWindow, errorHandler: errorHandler)
-            }
-            return
-        }
-
-        if terminalPref == "ghostty" {
-            if terminalWindow == "virtual" {
-                runScript(scriptPath: terminalVirtualWithScreen, handler: handlerName, parameters: passParameters)
-            } else {
-                runCommandInGhostty(command: escapedObject, errorHandler: errorHandler)
-            }
-            return
-        }
-
-        if terminalWindow == "new" {
-            runScript(scriptPath: terminalNewWindow, handler: handlerName, parameters: passParameters)
-        }
-        if terminalWindow == "current" {
-            runScript(scriptPath: terminalCurrentWindow, handler: handlerName, parameters: passParameters)
-        }
-        if terminalWindow == "tab" {
-            runScript(scriptPath: terminalNewTabDefault, handler: handlerName, parameters: passParameters)
-        }
-        if terminalWindow == "virtual" {
-            runScript(scriptPath: terminalVirtualWithScreen, handler: handlerName, parameters: passParameters)
-        }
+        )
     }
 
     private func runScript(scriptPath: String?, handler handlerName: String, parameters parametersInArray: [String]) {

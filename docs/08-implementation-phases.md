@@ -8,12 +8,13 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 - Terminal behavior parity tests are still pending for full mode matrix (`new/tab/current/virtual`) across all supported terminals.
 - In restricted environments, build may require explicit derived data path.
 
-## Progress Snapshot (2026-02-24)
+## Progress Snapshot (2026-02-26)
 - `AppDelegate.swift` compiles as the active app flow.
 - Swift/Objective-C bridging compile blockers are resolved.
 - `AboutWindowController` has been ported to Swift and is now compiled from `AboutWindowController.swift`.
 - Project builds successfully with macOS deployment target `10.13`.
 - Core service extraction is in place via `Shuttle/AppServices.swift` (`ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter`).
+- Phase 3 routing refactor is in place: `TerminalRouter` dispatches through terminal-specific backend strategy types for Terminal.app, iTerm, Warp, and Ghostty.
 
 ## Phase 0 - Baseline and Stabilize
 - Lock deployment target to 10.13.

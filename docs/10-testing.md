@@ -15,6 +15,9 @@ Test each mode (`new`, `tab`, `current`, `virtual`) across:
 - Warp
 - Ghostty
 
+Current state (2026-02-26):
+- Backend isolation is implemented in `TerminalRouter`; matrix execution is active work for M-004.
+
 ## Failure Path Tests
 - Missing/invalid `iTerm_version` value.
 - Invalid `inTerminal` value.
