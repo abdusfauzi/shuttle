@@ -44,6 +44,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-26: Executed `tests/regression_suite.sh` and `tests/regression_suite.sh --with-compile`; both produced `REGRESSION_BLOCKED_ENVIRONMENT` in sandbox while preserving successful `xcodebuild` validation.
 - 2026-02-26: Updated stale Objective-C source metadata in `MainMenu.xib` (`./Classes/AppDelegate.h`) to Swift source reference (`./AppDelegate.swift`) for base and Spanish localizations.
 - 2026-02-26: Added `tests/path_hygiene_check.sh` and integrated it into `tests/regression_suite.sh` to prevent regressions with hardcoded workstation paths.
+- 2026-02-26: Enhanced `tests/terminal_parity_probe.sh` to record terminal app versions (Terminal/iTerm/Warp/Ghostty) alongside presence for matrix evidence.
 - 2026-02-26: Legacy Objective-C runtime files (`main.m`, `AppDelegate.m/.h`, `LaunchAtLoginController.m/.h`, `AboutWindowController.m/.h`) and obsolete bridge/prefix headers were removed from repository after Swift-only target validation.
 - 2026-02-26: M-005 completed. Active build graph is Swift-only (`main.swift`, `AppDelegate.swift`, services/controllers in Swift); Objective-C app runtime sources are no longer in target sources and bridging header is removed from build settings.
 - 2026-02-26: M-003 completed. Isolated terminal dispatch via backend strategy objects in `TerminalRouter` for Terminal.app, iTerm (stable/nightly), Warp, and Ghostty; build validated on macOS `10.13` target.

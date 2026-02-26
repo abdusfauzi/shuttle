@@ -67,7 +67,11 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 - Command: `./tests/terminal_parity_probe.sh`
 - macOS: `26.3`
 - Preflight: `pass` (resources + routing markers present)
-- App presence: `Terminal.app`, `iTerm.app`, `Warp.app`, `Ghostty.app` detected
+- App presence:
+  - `Terminal.app` `2.15 (466)`
+  - `iTerm.app` `3.6.6 (3.6.6)`
+  - `Warp.app` `0.2026.02.18.08.22.02 (0.2026.02.18.08.22.02)`
+  - `Ghostty.app` `1.2.3 (12214)`
 - Outcome: `READY_FOR_MANUAL_MATRIX`
 
 ## Latest Smoke Attempt (2026-02-26, Sandbox)

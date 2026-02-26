@@ -29,6 +29,7 @@ Quick preflight:
 Current state (2026-02-26):
 - Backend isolation is implemented in `TerminalRouter`; full matrix execution (M-004) is currently blocked in sandbox/non-interactive environments and must run on interactive macOS with automation permissions.
 - `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and currently returns blocked status in sandboxed runs where GUI automation is unavailable.
+- `./tests/terminal_parity_probe.sh` now captures installed terminal versions to strengthen matrix evidence logging.
 
 ## Failure Path Tests
 - Missing/invalid `iTerm_version` value.
