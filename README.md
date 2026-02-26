@@ -68,6 +68,12 @@ Run the consolidated regression checks with:
 ./tests/regression_suite.sh
 ```
 
+Run path hygiene checks directly with:
+
+```bash
+./tests/path_hygiene_check.sh
+```
+
 Notes:
 - In restricted environments, use `-derivedDataPath` (as shown) to avoid permission issues with default Xcode paths.
 - Terminal automation may require Apple Events and Accessibility permissions.

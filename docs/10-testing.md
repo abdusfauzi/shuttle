@@ -19,11 +19,12 @@ Tracking document:
 - `docs/plans/terminal-parity-matrix.md`
 
 Quick preflight:
+- `./tests/path_hygiene_check.sh` (ensures docs/scripts stay free of hardcoded workstation paths)
 - `./apple-scripts/compile-all.sh` (run when `.applescript` sources change; requires interactive macOS session, may return `2` in sandbox/headless environments)
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
 - `./tests/terminal_parity_smoke.sh`
-- `./tests/regression_suite.sh` (runs preflight + smoke + build; returns `2` if environment blocks GUI automation)
+- `./tests/regression_suite.sh` (runs path hygiene + parity preflight + smoke + build; returns `2` if environment blocks GUI automation)
 
 Current state (2026-02-26):
 - Backend isolation is implemented in `TerminalRouter`; full matrix execution (M-004) is currently blocked in sandbox/non-interactive environments and must run on interactive macOS with automation permissions.

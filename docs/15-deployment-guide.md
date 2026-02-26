@@ -1,6 +1,7 @@
 # 15 - Deployment Guide
 
 ## Pre-Release Checklist
+- `./tests/path_hygiene_check.sh` passes.
 - Build passes on macOS target.
 - AppleScript resources are up to date (`./apple-scripts/compile-all.sh` run from interactive macOS session when source scripts changed).
 - Entitlements and signing are valid.

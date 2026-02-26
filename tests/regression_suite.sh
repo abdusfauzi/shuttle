@@ -26,8 +26,12 @@ echo
 
 blocked=0
 
+echo "1) Path hygiene checks"
+"$ROOT_DIR/tests/path_hygiene_check.sh"
+echo
+
 if [[ "$WITH_COMPILE" -eq 1 ]]; then
-    echo "1) Recompile AppleScript resources"
+    echo "2) Recompile AppleScript resources"
     set +e
     "$ROOT_DIR/apple-scripts/compile-all.sh"
     compile_rc=$?
@@ -41,12 +45,12 @@ if [[ "$WITH_COMPILE" -eq 1 ]]; then
     echo
 fi
 
-echo "2) Terminal parity preflight"
+echo "3) Terminal parity preflight"
 "$ROOT_DIR/tests/terminal_parity_resource_check.sh"
 "$ROOT_DIR/tests/terminal_parity_probe.sh"
 echo
 
-echo "3) Terminal parity smoke"
+echo "4) Terminal parity smoke"
 set +e
 "$ROOT_DIR/tests/terminal_parity_smoke.sh"
 smoke_rc=$?
@@ -59,7 +63,7 @@ elif [[ "$smoke_rc" -ne 0 ]]; then
 fi
 echo
 
-echo "4) Build validation"
+echo "5) Build validation"
 xcodebuild \
     -project "$ROOT_DIR/Shuttle.xcodeproj" \
     -scheme Shuttle \

@@ -56,6 +56,7 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 - Commands:
   - `./tests/regression_suite.sh`
   - `./tests/regression_suite.sh --with-compile`
+- Path hygiene gate: `pass` (`./tests/path_hygiene_check.sh`)
 - Build: `pass` (`xcodebuild` succeeded in both runs)
 - Terminal preflight/probe: `pass`
 - Compile step (`--with-compile`): `blocked` (exit `2`, compile services unavailable)
