@@ -26,7 +26,7 @@ Quick preflight:
 - `./tests/regression_suite.sh` (runs preflight + smoke + build; returns `2` if environment blocks GUI automation)
 
 Current state (2026-02-26):
-- Backend isolation is implemented in `TerminalRouter`; matrix execution is active work for M-004.
+- Backend isolation is implemented in `TerminalRouter`; full matrix execution (M-004) is currently blocked in sandbox/non-interactive environments and must run on interactive macOS with automation permissions.
 - `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and currently returns blocked status in sandboxed runs where GUI automation is unavailable.
 
 ## Failure Path Tests

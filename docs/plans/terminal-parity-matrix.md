@@ -7,6 +7,9 @@ Track behavior parity for command dispatch across supported terminals and open m
 - Terminals: `Terminal.app`, `iTerm (stable)`, `iTerm (nightly)`, `Warp`, `Ghostty`
 - Modes: `new`, `tab`, `current`, `virtual`
 
+## Overall Status
+- `blocked` in current sandbox environment; execute matrix on interactive macOS session to produce pass/fail cell results.
+
 ## Preconditions
 - App builds successfully on current branch.
 - macOS Automation and Accessibility permissions are granted for tested terminal apps.

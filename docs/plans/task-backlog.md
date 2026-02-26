@@ -28,7 +28,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 |---|---|---|---|---|---|---|---|---|---|
 | M-002 | Extract `ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter` from `AppDelegate.swift` | Phase 2 | done | P0 | unassigned | 2026-03-05 | M-001 | 2026-02-26 | Implemented in `Shuttle/AppServices.swift`, with `AppDelegate.swift` reduced to orchestration and action wiring. |
 | M-003 | Implement terminal backend isolation strategy for Terminal.app, iTerm, Warp, Ghostty, Virtual | Phase 3 | done | P0 | unassigned | 2026-03-12 | M-002 | 2026-02-26 | `TerminalRouter` now dispatches through terminal-specific backend strategy types with centralized mode normalization. |
-| M-004 | Execute full terminal behavior parity matrix across all open modes and supported terminals | Testing | in_progress | P0 | unassigned | 2026-03-14 | M-003 | 2026-02-26 | Matrix runbook added at `docs/plans/terminal-parity-matrix.md`; probe + smoke scripts now capture preflight, app presence, and sandbox automation blockers before manual cross-terminal execution. |
+| M-004 | Execute full terminal behavior parity matrix across all open modes and supported terminals | Testing | blocked | P0 | unassigned | 2026-03-14 | M-003 | 2026-02-26 | Matrix runbook added at `docs/plans/terminal-parity-matrix.md`; probe/smoke/regression scripts confirm current sandbox lacks GUI automation (`-1728`, `-10827`). Requires interactive macOS run with Automation/Accessibility permissions to unblock. |
 | M-005 | Retire remaining Objective-C path for launch-at-login and remove bridging header | Phase 4 | done | P1 | unassigned | 2026-03-19 | M-002, M-003 | 2026-02-26 | Active target now uses `LaunchAtLoginController.swift` and `main.swift`; Objective-C app/launch sources and bridging header are removed from build graph. |
 | M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | in_progress | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-02-26 | Legacy Objective-C runtime files and old bridging/prefix headers removed; AppleScript compile helpers are now root-relative (`./apple-scripts/compile-all.sh`) and stale duplicate script sources are removed. Added `./tests/regression_suite.sh` as a one-shot preflight/smoke/build runner with blocked-environment signaling. |
 
@@ -36,6 +36,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - Launch-at-login still relies on deprecated `LSSharedFileList*` APIs (now wrapped in Swift for macOS 10.13 compatibility) and should migrate to ServiceManagement with helper architecture in a future major change.
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
+- M-004 is currently blocked in this execution environment due unavailable GUI automation (`osascript`/`open -a Terminal.app` failures: `-1728`, `-10827`).
 
 ## Completed Log (Newest First)
 - 2026-02-26: Normalized all `apple-scripts/compile-*.sh` helpers to project-root relative paths, added canonical `apple-scripts/compile-all.sh` with explicit blocked-environment signaling (exit `2`), and removed stale duplicate directory `apple-scripts/iTermStable copy`.
@@ -64,4 +65,4 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 
 ## Next Review Checkpoint
 - Date: 2026-03-03
-- Focus: Complete M-004 terminal parity matrix and capture behavior gaps for release hardening (M-006).
+- Focus: Run M-004 matrix on interactive macOS session to clear blocked state, then complete release hardening (M-006).
