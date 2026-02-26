@@ -35,6 +35,7 @@ This folder tracks the migration of Shuttle to fully native Swift on macOS 10.13
 ### Plans
 - [plans/README.md](./plans/README.md)
 - [plans/task-backlog.md](./plans/task-backlog.md)
+- [plans/terminal-parity-matrix.md](./plans/terminal-parity-matrix.md)
 
 ## Current Snapshot
 - Product: status bar SSH launcher for macOS.

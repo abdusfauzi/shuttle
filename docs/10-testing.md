@@ -15,6 +15,12 @@ Test each mode (`new`, `tab`, `current`, `virtual`) across:
 - Warp
 - Ghostty
 
+Tracking document:
+- `docs/plans/terminal-parity-matrix.md`
+
+Quick preflight:
+- `./tests/terminal_parity_resource_check.sh`
+
 Current state (2026-02-26):
 - Backend isolation is implemented in `TerminalRouter`; matrix execution is active work for M-004.
 
