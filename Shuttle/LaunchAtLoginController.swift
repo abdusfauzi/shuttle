@@ -1,14 +1,22 @@
 import Cocoa
 import CoreServices
+import ServiceManagement
 
 final class LaunchAtLoginController: NSObject {
     @objc dynamic var launchAtLogin: Bool {
         get {
-            willLaunchAtLogin(appURL)
+            if #available(macOS 13.0, *) {
+                return SMAppService.mainApp.status == .enabled
+            }
+            return willLaunchAtLogin(appURL)
         }
         set {
             willChangeValue(forKey: startAtLoginKey)
-            setLaunchAtLogin(newValue, for: appURL)
+            if #available(macOS 13.0, *) {
+                setLaunchAtLoginModern(newValue)
+            } else {
+                setLaunchAtLoginLegacy(newValue, for: appURL)
+            }
             didChangeValue(forKey: startAtLoginKey)
         }
     }
@@ -18,11 +26,15 @@ final class LaunchAtLoginController: NSObject {
     private lazy var appURL: URL = URL(fileURLWithPath: Bundle.main.bundlePath)
 
     override init() {
-        loginItems = LSSharedFileListCreate(
-            nil,
-            kLSSharedFileListSessionLoginItems.takeUnretainedValue(),
-            nil
-        )?.takeRetainedValue()
+        if #available(macOS 13.0, *) {
+            loginItems = nil
+        } else {
+            loginItems = LSSharedFileListCreate(
+                nil,
+                kLSSharedFileListSessionLoginItems.takeUnretainedValue(),
+                nil
+            )?.takeRetainedValue()
+        }
         super.init()
 
         if let loginItems {
@@ -54,16 +66,31 @@ final class LaunchAtLoginController: NSObject {
         findItem(with: itemURL, in: loginItems) != nil
     }
 
-    func setLaunchAtLogin(_ enabled: Bool, for itemURL: URL) {
+    private func setLaunchAtLoginModern(_ enabled: Bool) {
+        if #available(macOS 13.0, *) {
+            do {
+                if enabled {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                NSLog("Failed to update launch-at-login with SMAppService: %@", error.localizedDescription)
+            }
+        }
+    }
+
+    private func setLaunchAtLoginLegacy(_ enabled: Bool, for itemURL: URL) {
         guard let loginItems else {
             return
         }
 
         let appItem = findItem(with: itemURL, in: loginItems)
         if enabled, appItem == nil {
+            let insertPosition = unsafeBitCast(kLSSharedFileListItemBeforeFirst.toOpaque(), to: LSSharedFileListItem.self)
             LSSharedFileListInsertItemURL(
                 loginItems,
-                kLSSharedFileListItemBeforeFirst.takeUnretainedValue(),
+                insertPosition,
                 nil,
                 nil,
                 itemURL as CFURL,

@@ -10,7 +10,7 @@ source "$COMMON_LIB"
 
 mkdir -p "$OUTPUT_DIR"
 
-echo "Compiling AppleScripts for Warp (legacy helpers)..."
+echo "Compiling AppleScripts for Warp (legacy helpers, deprecated)..."
 compile_script "$OUTPUT_DIR/Warp-stable-new-window.scpt" "$SOURCE_DIR/Warp-stable-new-window.applescript"
 compile_script "$OUTPUT_DIR/Warp-stable-current-window.scpt" "$SOURCE_DIR/Warp-stable-current-window.applescript"
 compile_script "$OUTPUT_DIR/Warp-stable-new-tab-default.scpt" "$SOURCE_DIR/Warp-stable-new-tab-default.applescript"

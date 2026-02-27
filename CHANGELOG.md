@@ -5,14 +5,50 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- The ability to add a second json.config file 
-- The ability to add ```[---]``` in the name of a command to add a line seperator 
-- Adding a new apple script which will allow running commands in the background with screen
-- @philippetev Changes to iTerm applescripts to fix issues with settings in iTerm's Preferences/General
-- French translations by @anivon
-- @anivon localize Error parsing config message is JSON is invalid 
-- @blackadmin version typos in about window. 
+
+### Added
 - Added support for selecting Warp and Ghostty as terminal backends.
+- Added `virtual` open mode backed by `screen` for background command execution.
+- Added French translations by @anivon.
+- Added `[---]` separator syntax support in command names.
+- Added `tests/regression_suite.sh` one-shot preflight/smoke/build runner with blocked-environment signaling (exit `2`).
+- Added `tests/terminal_parity_probe.sh` to record installed terminal app versions for matrix evidence.
+- Added `tests/terminal_parity_smoke.sh` AppleScript handler dispatch harness.
+- Added `tests/terminal_parity_resource_check.sh` to validate required `.scpt` resources and backend routing markers.
+- Added `tests/path_hygiene_check.sh` to prevent regressions from hardcoded workstation paths.
+- Added `apple-scripts/compile-all.sh` canonical compiler entry point (project-root relative; exits `2` in headless environments).
+- Added `docs/plans/terminal-parity-matrix.md` cross-terminal behavior matrix and execution runbook.
+- Added `tests/compile_common_exit_code_check.sh` to validate AppleScript compiler failures propagate as non-zero exit codes.
+- Added `tests/compile_all_policy_check.sh` to enforce default Warp legacy compile skip behavior.
+- Added `tests/warp_legacy_compile_check.sh` to validate optional legacy Warp AppleScript compilation.
+- Added proactive onboarding preflight checks for required setup (config readability, Accessibility, Automation to System Events).
+- Added `tests/preflight_permissions_guard.sh`, `tests/preflight_alert_copy_check.sh`, and `tests/preflight_invocation_check.sh` for onboarding regression coverage.
+- Added Ghostty onboarding fallback path for AppleEvents authorization failures and guard tests (`tests/ghostty_launch_policy_check.sh`, `tests/ghostty_automation_fallback_check.sh`).
+
+### Changed
+- Migrated all app runtime code from Objective-C to Swift; `main.swift` is the active entrypoint.
+- Extracted `ConfigService`, `SSHConfigParser`, `MenuBuilder`, and `TerminalRouter` from `AppDelegate.swift` into `Shuttle/AppServices.swift`; `AppDelegate.swift` is now orchestration-only.
+- `TerminalRouter` now dispatches through isolated backend strategy types (`TerminalAppBackend`, `ITermBackend`, `WarpBackend`, `GhosttyBackend`) — one struct per terminal, no branching in the coordinator.
+- Migrated launch-at-login to `LaunchAtLoginController.swift`; removed Objective-C implementation.
+- Migrated `AboutWindowController` to `AboutWindowController.swift`.
+- Updated `MainMenu.xib` metadata reference from legacy `AppDelegate.h` to `AppDelegate.swift`.
+- Updated legacy Warp AppleScript helpers to compile cleanly with current AppleScript syntax.
+- `apple-scripts/compile-all.sh` now skips deprecated Warp legacy helper compilation by default; opt-in via `INCLUDE_LEGACY_WARP_COMPILE=1`.
+- AppleScript compile helper now correctly propagates non-zero compiler exit codes on failures.
+- Ghostty command dispatch now avoids `open -na` instance fan-out and uses direct fallback execution when Automation permission is unavailable.
+- URL launch detection is now strict-scheme only (`://`) to avoid misclassifying shell commands (for example `ssh ...`) as Finder URLs.
+- @philippetev Changes to iTerm applescripts to fix issues with settings in iTerm's Preferences/General.
+- @anivon localize "Error parsing config" message when JSON is invalid.
+- @blackadmin version typos in about window.
+
+### Removed
+- Removed Objective-C runtime sources (`main.m`, `AppDelegate.m/.h`, `LaunchAtLoginController.m/.h`, `AboutWindowController.m/.h`).
+- Removed Swift/Objective-C bridging header and prefix header from build settings.
+- Removed stale duplicate `apple-scripts/iTermStable copy` directory.
+
+### Pending
+- The ability to add a second json.config file.
+- Terminal parity matrix (M-004): live cell verification pending interactive macOS session with Automation/Accessibility permissions.
 
 ## [1.2.9] - 2016-10-18
 ### Added

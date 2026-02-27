@@ -10,6 +10,14 @@
 "About " = "关于 ";
 "Version: " = "版本：";
 " - A simple SSH shortcut menu." = " - 简易的 SSH 快捷菜单。";
+" (Swift core refactor; SwiftUI migration groundwork)" = "（Swift 核心重构；为 SwiftUI 迁移打基础）";
+"Shuttle setup required" = "需要完成 Shuttle 设置";
+"Open Privacy Settings" = "打开隐私设置";
+"Open Config" = "打开配置文件";
+"Accessibility permission is required." = "需要授予辅助功能权限。";
+"Automation permission is required (System Events)." = "需要授予自动化权限（System Events）。";
+"Config file is not readable." = "配置文件不可读。";
+"Grant permissions and try again." = "请授予权限后重试。";
 
 "Quit" = "退出";
 "Continue" = "继续";

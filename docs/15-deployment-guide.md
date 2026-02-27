@@ -6,6 +6,11 @@
 - AppleScript resources are up to date (`./apple-scripts/compile-all.sh` run from interactive macOS session when source scripts changed).
 - Entitlements and signing are valid.
 - `./tests/regression_suite.sh` completes with `REGRESSION_PASS` (or `REGRESSION_BLOCKED_ENVIRONMENT` only in known sandbox contexts).
+- First-run onboarding preflight validates required setup:
+  - Missing permissions/config show the setup card before shortcut execution.
+  - `Open Privacy Settings` opens Security/Privacy panes.
+  - `Open Config` opens the active Shuttle config file.
+  - After granting requirements, SSH shortcuts run without onboarding block.
 - Migration phase acceptance criteria met.
 
 ## Release Steps

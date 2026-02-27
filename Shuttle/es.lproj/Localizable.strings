@@ -7,3 +7,11 @@
 "About " = "Acerca ";
 "Version: " = "Versión: ";
 " - A simple SSH shortcut menu." = " - Un SSH menu simple de shortcuts (atajos).";
+" (Swift core refactor; SwiftUI migration groundwork)" = " (núcleo refactorizado en Swift; base para migración a SwiftUI)";
+"Shuttle setup required" = "Configuracion de Shuttle requerida";
+"Open Privacy Settings" = "Abrir ajustes de privacidad";
+"Open Config" = "Abrir configuracion";
+"Accessibility permission is required." = "Se requiere permiso de Accesibilidad.";
+"Automation permission is required (System Events)." = "Se requiere permiso de Automatizacion (System Events).";
+"Config file is not readable." = "El archivo de configuracion no se puede leer.";
+"Grant permissions and try again." = "Concede permisos y vuelve a intentarlo.";

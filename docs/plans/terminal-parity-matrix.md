@@ -8,7 +8,7 @@ Track behavior parity for command dispatch across supported terminals and open m
 - Modes: `new`, `tab`, `current`, `virtual`
 
 ## Overall Status
-- `blocked` in current sandbox environment; execute matrix on interactive macOS session to produce pass/fail cell results.
+- `in_progress`: automation capability checks now pass in interactive macOS session; complete manual matrix to produce pass/fail cell results.
 
 ## Preconditions
 - App builds successfully on current branch.
@@ -84,3 +84,22 @@ Status values: `pending`, `pass`, `fail`, `blocked`
   - `open -a /System/Applications/Utilities/Terminal.app` -> `-10827` (`kLSNoExecutableErr`)
 - Outcome: `BLOCKED_ENVIRONMENT`
 - Interpretation: this execution environment cannot validate live terminal behavior; matrix cell verdicts remain `pending` until run on an interactive macOS session with Automation/Accessibility permissions.
+
+## Latest Smoke Attempt (2026-02-26, Interactive macOS)
+- Command: `./tests/terminal_parity_smoke.sh`
+- Host macOS: `26.3`
+- Preflight checks: `pass`
+- GUI capability checks: `pass`
+  - `osascript 'tell application "Terminal" to activate'` -> `rc=0`
+  - `open -a /System/Applications/Utilities/Terminal.app` -> `rc=0`
+- AppleScript handler invocation checks: `pass` (`rc=0` for Terminal/iTerm/virtual script dispatch)
+- Outcome: `MANUAL_MATRIX_REQUIRED`
+- Interpretation: environment is capable of automation; next step is filling parity matrix cells with per-terminal/per-mode behavioral verification evidence.
+
+## Latest Regression Suite Attempt (2026-02-26, Interactive macOS)
+- Command: `./tests/regression_suite.sh`
+- Path hygiene gate: `pass`
+- Terminal preflight/probe: `pass`
+- Smoke step: `pass` (`MANUAL_MATRIX_REQUIRED`)
+- Build: `pass` (`xcodebuild` succeeded)
+- Outcome: `REGRESSION_PASS`

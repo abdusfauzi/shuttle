@@ -10,20 +10,20 @@ compile_script() {
     if osacompile -o "$output_path" -x "$source_path" >"$error_output" 2>&1; then
         rm -f "$error_output"
         return 0
+    else
+        local rc=$?
+        local compiler_stderr
+        compiler_stderr="$(cat "$error_output")"
+        rm -f "$error_output"
+
+        echo "ERROR: failed to compile $source_path -> $output_path" >&2
+        if [[ "$compiler_stderr" == *"Connection invalid"* ]]; then
+            echo "Reason: AppleScript compile services are unavailable in this environment." >&2
+            echo "Run compile scripts from an interactive macOS session (not sandboxed/headless)." >&2
+            return 2
+        fi
+
+        echo "$compiler_stderr" >&2
+        return "$rc"
     fi
-
-    local rc=$?
-    local compiler_stderr
-    compiler_stderr="$(cat "$error_output")"
-    rm -f "$error_output"
-
-    echo "ERROR: failed to compile $source_path -> $output_path" >&2
-    if [[ "$compiler_stderr" == *"Connection invalid"* ]]; then
-        echo "Reason: AppleScript compile services are unavailable in this environment." >&2
-        echo "Run compile scripts from an interactive macOS session (not sandboxed/headless)." >&2
-        return 2
-    fi
-
-    echo "$compiler_stderr" >&2
-    return "$rc"
 }

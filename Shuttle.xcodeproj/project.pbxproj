@@ -15,6 +15,7 @@
 		D1A000300000000000000001 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000300000000000000002 /* AppServices.swift */; };
 		D1A000400000000000000001 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000400000000000000002 /* LaunchAtLoginController.swift */; };
 		D1A000500000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000500000000000000002 /* main.swift */; };
+		D1A000600000000000000001 /* OnboardingPreflight.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A000600000000000000002 /* OnboardingPreflight.swift */; };
 		24399FE6219CD0F700C8658F /* virtual-with-screen.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 24399FE5219CD0F700C8658F /* virtual-with-screen.scpt */; };
 		6FC541A31D45CF7F00A896E3 /* AboutWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6FC541A51D45CF7F00A896E3 /* AboutWindowController.xib */; };
 		7E74A7C61789CE2F0079E0D2 /* shuttle.default.json in Resources */ = {isa = PBXBuildFile; fileRef = 7E74A7C51789CE2F0079E0D2 /* shuttle.default.json */; };
@@ -45,6 +46,7 @@
 		D1A000300000000000000002 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		D1A000400000000000000002 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
 		D1A000500000000000000002 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		D1A000600000000000000002 /* OnboardingPreflight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPreflight.swift; sourceTree = "<group>"; };
 		D1A000200000000000000002 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		24399FE5219CD0F700C8658F /* virtual-with-screen.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; path = "virtual-with-screen.scpt"; sourceTree = "<group>"; };
 		7E72D21E178003ED00A6389C /* Shuttle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Shuttle.entitlements; sourceTree = "<group>"; };
@@ -174,6 +176,7 @@
 					D1A000400000000000000002 /* LaunchAtLoginController.swift */,
 					D1A000100000000000000002 /* AppDelegate.swift */,
 					D1A000300000000000000002 /* AppServices.swift */,
+					D1A000600000000000000002 /* OnboardingPreflight.swift */,
 					C149EC1215D5214600B1F558 /* MainMenu.xib */,
 					0ADB3B10178EF8E2004E9BB9 /* Images */,
 				C149EC0415D5214600B1F558 /* Supporting Files */,
@@ -285,6 +288,7 @@
 					D1A000200000000000000001 /* AboutWindowController.swift in Sources */,
 					D1A000500000000000000001 /* main.swift in Sources */,
 					D1A000100000000000000001 /* AppDelegate.swift in Sources */,
+					D1A000600000000000000001 /* OnboardingPreflight.swift in Sources */,
 					D1A000300000000000000001 /* AppServices.swift in Sources */,
 				);
 				runOnlyForDeploymentPostprocessing = 0;

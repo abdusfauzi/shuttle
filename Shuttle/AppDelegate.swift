@@ -31,6 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let sshConfigParser = SSHConfigParser()
     private let menuBuilder = MenuBuilder()
     private let terminalRouter = TerminalRouter()
+    private let onboardingPreflight = OnboardingPreflight()
 
     override func awakeFromNib() {
         shuttleConfigFile = configService.resolveShuttleConfigFile()
@@ -52,6 +53,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         launchAtLoginController = LaunchAtLoginController()
         menu.delegate = self
+
+        DispatchQueue.main.async { [weak self] in
+            self?.showPreflightOnboardingIfNeeded()
+        }
     }
 
     func menuWillOpen(_ menu: NSMenu) {
@@ -116,6 +121,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @IBAction func openHost(_ sender: NSMenuItem) {
+        let status = onboardingPreflight.evaluate(configPath: shuttleConfigFile)
+        if !status.isReady {
+            showPreflightOnboardingIfNeeded()
+            return
+        }
+
         guard let representedObject = sender.representedObject as? String else {
             return
         }
@@ -187,6 +198,64 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if alert.runModal() == .alertFirstButtonReturn {
             NSApp.terminate(NSApp)
+        }
+    }
+
+    private func showPreflightOnboardingIfNeeded() {
+        let status = onboardingPreflight.evaluate(configPath: shuttleConfigFile)
+        guard !status.isReady else {
+            return
+        }
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = NSLocalizedString("Shuttle setup required", comment: "")
+        alert.informativeText = preflightMessage(status)
+        alert.addButton(withTitle: NSLocalizedString("Open Privacy Settings", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Open Config", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Continue", comment: ""))
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            openPrivacySettings()
+        case .alertSecondButtonReturn:
+            configure(nil)
+        default:
+            break
+        }
+    }
+
+    private func preflightMessage(_ status: PreflightStatus) -> String {
+        var lines: [String] = []
+
+        if !status.accessibilityGranted {
+            lines.append(NSLocalizedString("Accessibility permission is required.", comment: ""))
+        }
+        if !status.automationGranted {
+            lines.append(NSLocalizedString("Automation permission is required (System Events).", comment: ""))
+        }
+        if !status.configReadable {
+            lines.append(NSLocalizedString("Config file is not readable.", comment: ""))
+        }
+
+        lines.append(NSLocalizedString("Grant permissions and try again.", comment: ""))
+        return lines.joined(separator: "\n")
+    }
+
+    private func openPrivacySettings() {
+        let urls = [
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy"
+        ]
+
+        for urlString in urls {
+            guard let url = URL(string: urlString) else {
+                continue
+            }
+            if NSWorkspace.shared.open(url) {
+                return
+            }
         }
     }
 }

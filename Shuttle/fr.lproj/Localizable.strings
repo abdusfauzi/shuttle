@@ -8,3 +8,11 @@
 "Version: " = "Version: ";
 " - A simple SSH shortcut menu." = " - Le gestionnaire de raccourcis SSH.";
 "Error parsing config" = "Fichier de paramétrage invalide";
+" (Swift core refactor; SwiftUI migration groundwork)" = " (refonte du coeur en Swift ; base de migration vers SwiftUI)";
+"Shuttle setup required" = "Configuration Shuttle requise";
+"Open Privacy Settings" = "Ouvrir les reglages de confidentialite";
+"Open Config" = "Ouvrir la configuration";
+"Accessibility permission is required." = "L'autorisation Accessibilite est requise.";
+"Automation permission is required (System Events)." = "L'autorisation Automatisation est requise (System Events).";
+"Config file is not readable." = "Le fichier de configuration n'est pas lisible.";
+"Grant permissions and try again." = "Accordez les autorisations puis reessayez.";

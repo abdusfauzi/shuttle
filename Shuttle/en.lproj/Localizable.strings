@@ -2,3 +2,12 @@
  Localizable.strings
  Shuttle
  */
+
+" (Swift core refactor; SwiftUI migration groundwork)" = " (Swift core refactor; SwiftUI migration groundwork)";
+"Shuttle setup required" = "Shuttle setup required";
+"Open Privacy Settings" = "Open Privacy Settings";
+"Open Config" = "Open Config";
+"Accessibility permission is required." = "Accessibility permission is required.";
+"Automation permission is required (System Events)." = "Automation permission is required (System Events).";
+"Config file is not readable." = "Config file is not readable.";
+"Grant permissions and try again." = "Grant permissions and try again.";

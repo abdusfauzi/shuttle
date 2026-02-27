@@ -30,7 +30,13 @@ class AboutWindowController: NSWindowController {
         )
         appName.stringValue = programName
 
-        let programVersion = String(format: "%@%@", NSLocalizedString("Version: ", comment: ""), applicationVersion)
+        let migrationNote = NSLocalizedString(" (Swift core refactor; SwiftUI migration groundwork)", comment: "")
+        let programVersion = String(
+            format: "%@%@%@",
+            NSLocalizedString("Version: ", comment: ""),
+            applicationVersion,
+            migrationNote
+        )
         appVersion.stringValue = programVersion
 
         appCopyright.font = NSFont.systemFont(ofSize: 10)

@@ -462,7 +462,22 @@ final class TerminalRouter {
             if mode == .virtual {
                 return nil
             }
-            return URL(string: command)
+
+            let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedCommand.isEmpty || !trimmedCommand.contains("://") {
+                return nil
+            }
+
+            guard let schemeSeparator = trimmedCommand.range(of: "://") else {
+                return nil
+            }
+
+            let scheme = String(trimmedCommand[..<schemeSeparator.lowerBound]).lowercased()
+            guard scheme.range(of: "^[a-z][a-z0-9+.-]*$", options: .regularExpression) != nil else {
+                return nil
+            }
+
+            return URL(string: trimmedCommand)
         }
     }
 
@@ -544,7 +559,7 @@ final class TerminalRouter {
         let handlerName: String
         let runScript: (_ scriptPath: String?, _ handlerName: String, _ parameters: [String]) -> Void
         let runUIControlledTerminal: (_ terminalName: String, _ command: String, _ terminalWindow: String, _ errorHandler: ErrorHandler) -> Void
-        let runGhostty: (_ command: String, _ errorHandler: ErrorHandler) -> Void
+        let runGhosttyDirect: (_ command: String, _ errorHandler: ErrorHandler) -> Void
     }
 
     private struct DispatchResult {
@@ -579,7 +594,13 @@ final class TerminalRouter {
             if request.mode == .virtual {
                 services.runScript(services.scripts.terminalVirtualWithScreen, services.handlerName, request.scriptParameters)
             } else {
-                services.runGhostty(request.command, errorHandler)
+                services.runUIControlledTerminal("Ghostty", request.command, request.mode.rawValue) { message, info, canContinue in
+                    if info.contains("Not authorized to send Apple events to System Events") {
+                        services.runGhosttyDirect(request.command, errorHandler)
+                        return
+                    }
+                    errorHandler(message, info, canContinue)
+                }
             }
             return nil
         }
@@ -730,10 +751,21 @@ final class TerminalRouter {
                     errorHandler: errorHandler
                 )
             },
-            runGhostty: { [weak self] command, errorHandler in
-                self?.runCommandInGhostty(command: command, errorHandler: errorHandler)
+            runGhosttyDirect: { [weak self] command, errorHandler in
+                self?.runCommandInGhosttyDirect(command: command, errorHandler: errorHandler)
             }
         )
+    }
+
+    private func runCommandInGhosttyDirect(command: String, errorHandler: (String, String, Bool) -> Void) {
+        do {
+            let openTask = Process()
+            openTask.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            openTask.arguments = ["-a", "Ghostty", "--args", "-e", "/bin/zsh", "-lc", command]
+            try openTask.run()
+        } catch {
+            errorHandler("Unable to run command in Ghostty.", error.localizedDescription, false)
+        }
     }
 
     private func runScript(scriptPath: String?, handler handlerName: String, parameters parametersInArray: [String]) {
@@ -823,17 +855,6 @@ final class TerminalRouter {
             let errorInfo = (scriptError?[NSAppleScript.errorMessage] as? String)
                 ?? NSLocalizedString("Please verify macOS automation/accessibility permissions for the selected terminal.", comment: "")
             errorHandler(errorMessage, errorInfo, false)
-        }
-    }
-
-    private func runCommandInGhostty(command: String, errorHandler: (String, String, Bool) -> Void) {
-        do {
-            let openTask = Process()
-            openTask.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            openTask.arguments = ["-na", "Ghostty.app", "--args", "-e", command]
-            try openTask.run()
-        } catch {
-            errorHandler("Unable to launch Ghostty.", error.localizedDescription, false)
         }
     }
 
