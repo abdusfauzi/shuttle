@@ -6,6 +6,8 @@ class AboutWindowController: NSWindowController {
     @IBOutlet weak var appVersion: NSTextField!
     @IBOutlet weak var appMaintainer: NSTextField!
     @IBOutlet weak var appCopyright: NSTextField!
+    @IBOutlet weak var originalAuthorButton: NSButton!
+    @IBOutlet weak var forkRepositoryButton: NSButton!
 
     private var plistDict: [String: Any] = [:]
 
@@ -50,6 +52,11 @@ class AboutWindowController: NSWindowController {
         )
         appMaintainer.stringValue = maintainerLine
 
+        originalAuthorButton.target = self
+        originalAuthorButton.action = #selector(btnOriginalAuthor(_:))
+        forkRepositoryButton.target = self
+        forkRepositoryButton.action = #selector(btnForkRepository(_:))
+
         appCopyright.font = NSFont.systemFont(ofSize: 10)
         appCopyright.stringValue = applicationCopyright
     }
@@ -60,7 +67,7 @@ class AboutWindowController: NSWindowController {
             return
         }
 
-        NSWorkspace.shared.open(homeURL)
+        openURL(homeURL)
     }
 
     @IBAction func btnForkRepository(_ sender: Any) {
@@ -69,6 +76,21 @@ class AboutWindowController: NSWindowController {
             return
         }
 
-        NSWorkspace.shared.open(homeURL)
+        openURL(homeURL)
+    }
+
+    private func openURL(_ url: URL) {
+        if NSWorkspace.shared.open(url) {
+            return
+        }
+
+        do {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            task.arguments = [url.absoluteString]
+            try task.run()
+        } catch {
+            NSLog("Failed to open URL %@: %@", url.absoluteString, error.localizedDescription)
+        }
     }
 }
