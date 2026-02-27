@@ -18,6 +18,8 @@
 "Automation permission is required (System Events)." = "需要授予自动化权限（System Events）。";
 "Config file is not readable." = "配置文件不可读。";
 "Grant permissions and try again." = "请授予权限后重试。";
+"Maintained by " = "维护者：";
+"Abdus Fauzi" = "Abdus Fauzi";
 
 "Quit" = "退出";
 "Continue" = "继续";

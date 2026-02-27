@@ -3,9 +3,11 @@
 ## Pre-Release Checklist
 - `./tests/path_hygiene_check.sh` passes.
 - Build passes on macOS target.
+- Minimum supported macOS target is `13.0`.
 - AppleScript resources are up to date (`./apple-scripts/compile-all.sh` run from interactive macOS session when source scripts changed).
 - Entitlements and signing are valid.
 - `./tests/regression_suite.sh` completes with `REGRESSION_PASS` (or `REGRESSION_BLOCKED_ENVIRONMENT` only in known sandbox contexts).
+- Clean signed release build footprint check passes (`rm -rf /tmp/ShuttleSignedBuild` then `./tests/release_bundle_size_check.sh`).
 - First-run onboarding preflight validates required setup:
   - Missing permissions/config show the setup card before shortcut execution.
   - `Open Privacy Settings` opens Security/Privacy panes.

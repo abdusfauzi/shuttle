@@ -16,3 +16,5 @@
 "Automation permission is required (System Events)." = "L'autorisation Automatisation est requise (System Events).";
 "Config file is not readable." = "Le fichier de configuration n'est pas lisible.";
 "Grant permissions and try again." = "Accordez les autorisations puis reessayez.";
+"Maintained by " = "Maintenu par ";
+"Abdus Fauzi" = "Abdus Fauzi";

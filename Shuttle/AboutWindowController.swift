@@ -4,6 +4,7 @@ import Cocoa
 class AboutWindowController: NSWindowController {
     @IBOutlet weak var appName: NSTextField!
     @IBOutlet weak var appVersion: NSTextField!
+    @IBOutlet weak var appMaintainer: NSTextField!
     @IBOutlet weak var appCopyright: NSTextField!
 
     private var plistDict: [String: Any] = [:]
@@ -37,19 +38,37 @@ class AboutWindowController: NSWindowController {
             applicationVersion,
             migrationNote
         )
+        appVersion.cell?.wraps = true
+        appVersion.cell?.usesSingleLineMode = false
         appVersion.stringValue = programVersion
+
+        let maintainerName = NSLocalizedString("Abdus Fauzi", comment: "")
+        let maintainerLine = String(
+            format: "%@%@",
+            NSLocalizedString("Maintained by ", comment: ""),
+            maintainerName
+        )
+        appMaintainer.stringValue = maintainerLine
 
         appCopyright.font = NSFont.systemFont(ofSize: 10)
         appCopyright.stringValue = applicationCopyright
     }
 
-    @IBAction func btnHomepage(_ sender: Any) {
+    @IBAction func btnOriginalAuthor(_ sender: Any) {
         guard let applicationHomepage = plistDict["Product Homepage"] as? String,
               let homeURL = URL(string: applicationHomepage) else {
             return
         }
 
         NSWorkspace.shared.open(homeURL)
-        close()
+    }
+
+    @IBAction func btnForkRepository(_ sender: Any) {
+        guard let forkHomepage = plistDict["Fork Homepage"] as? String,
+              let homeURL = URL(string: forkHomepage) else {
+            return
+        }
+
+        NSWorkspace.shared.open(homeURL)
     }
 }

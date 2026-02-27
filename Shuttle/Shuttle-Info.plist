@@ -36,5 +36,7 @@
 	<string>NSApplication</string>
 	<key>Product Homepage</key>
 	<string>http://fitztrev.github.io/shuttle/</string>
+	<key>Fork Homepage</key>
+	<string>https://github.com/abdusfauzi/shuttle</string>
 </dict>
 </plist>

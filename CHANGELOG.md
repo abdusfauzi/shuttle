@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added proactive onboarding preflight checks for required setup (config readability, Accessibility, Automation to System Events).
 - Added `tests/preflight_permissions_guard.sh`, `tests/preflight_alert_copy_check.sh`, and `tests/preflight_invocation_check.sh` for onboarding regression coverage.
 - Added Ghostty onboarding fallback path for AppleEvents authorization failures and guard tests (`tests/ghostty_launch_policy_check.sh`, `tests/ghostty_automation_fallback_check.sh`).
+- Added `tests/about_window_retention_check.sh` to prevent About popup action regressions.
+- Added `tests/footprint_deployment_target_check.sh` and `tests/release_bundle_size_check.sh` to enforce deployment baseline and release footprint guardrails.
 
 ### Changed
 - Migrated all app runtime code from Objective-C to Swift; `main.swift` is the active entrypoint.
@@ -37,6 +39,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - AppleScript compile helper now correctly propagates non-zero compiler exit codes on failures.
 - Ghostty command dispatch now avoids `open -na` instance fan-out and uses direct fallback execution when Automation permission is unavailable.
 - URL launch detection is now strict-scheme only (`://`) to avoid misclassifying shell commands (for example `ssh ...`) as Finder URLs.
+- About popup has refreshed spacing and now exposes separate links for original project and maintained fork.
+- Minimum supported macOS target is now `13.0` to reduce release bundle footprint.
 - @philippetev Changes to iTerm applescripts to fix issues with settings in iTerm's Preferences/General.
 - @anivon localize "Error parsing config" message when JSON is invalid.
 - @blackadmin version typos in about window.

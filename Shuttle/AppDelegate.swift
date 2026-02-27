@@ -26,6 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var ignoreKeywords: [String] = []
 
     private var launchAtLoginController: LaunchAtLoginController!
+    private var aboutWindowController: AboutWindowController?
 
     private let configService = ConfigService()
     private let sshConfigParser = SSHConfigParser()
@@ -170,10 +171,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @IBAction func showAbout(_ sender: Any?) {
-        let aboutWindow = AboutWindowController(windowNibName: "AboutWindowController")
-        aboutWindow.window?.makeKeyAndOrderFront(nil)
-        aboutWindow.window?.level = .floating
-        aboutWindow.showWindow(self)
+        aboutWindowController = AboutWindowController(windowNibName: "AboutWindowController")
+        aboutWindowController?.showWindow(self)
+        aboutWindowController?.window?.makeKeyAndOrderFront(nil)
+        aboutWindowController?.window?.level = .floating
     }
 
     @IBAction func quit(_ sender: Any?) {

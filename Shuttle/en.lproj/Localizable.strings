@@ -11,3 +11,5 @@
 "Automation permission is required (System Events)." = "Automation permission is required (System Events).";
 "Config file is not readable." = "Config file is not readable.";
 "Grant permissions and try again." = "Grant permissions and try again.";
+"Maintained by " = "Maintained by ";
+"Abdus Fauzi" = "Abdus Fauzi";
