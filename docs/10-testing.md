@@ -26,9 +26,9 @@ Quick preflight:
 - `./tests/terminal_parity_smoke.sh`
 - `./tests/regression_suite.sh` (runs path hygiene + parity preflight + smoke + build; returns `2` if environment blocks GUI automation)
 
-Current state (2026-02-26):
-- Backend isolation is implemented in `TerminalRouter`; full matrix execution (M-004) is currently blocked in sandbox/non-interactive environments and must run on interactive macOS with automation permissions.
-- `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and currently returns blocked status in sandboxed runs where GUI automation is unavailable.
+Current state (2026-03-06):
+- Backend isolation is implemented in `TerminalRouter`; full matrix execution (M-004) is complete with `20/20` pass in interactive macOS.
+- `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and currently passes in interactive macOS; sandbox/headless environments may still return `2` when GUI automation is unavailable.
 - `./tests/terminal_parity_probe.sh` now captures installed terminal versions to strengthen matrix evidence logging.
 
 ## Failure Path Tests

@@ -5,10 +5,9 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 
 ## Known Blockers (Current)
 - Launch-at-login still uses deprecated `LSSharedFileList*` APIs (now wrapped in Swift for 10.13 compatibility).
-- Terminal behavior parity tests are still pending for full mode matrix (`new/tab/current/virtual`) across all supported terminals.
 - In restricted environments, build may require explicit derived data path.
 
-## Progress Snapshot (2026-02-26)
+## Progress Snapshot (2026-03-06)
 - `AppDelegate.swift` compiles as the active app flow.
 - `main.swift` is now the active app entrypoint.
 - Swift/Objective-C bridging compile blockers are resolved.
@@ -19,6 +18,7 @@ Finish migration to fully Swift code while preserving compatibility and terminal
 - Launch-at-login path compiles from `LaunchAtLoginController.swift`; Objective-C app runtime sources and bridging-header build setting are removed from active target configuration.
 - Legacy Objective-C runtime source files and obsolete bridge/prefix headers have been removed from the repository.
 - AppleScript compile helpers are now root-relative via `apple-scripts/compile-all.sh`; stale duplicate script sources were removed.
+- Full parity matrix has been completed in interactive macOS (`20/20`), and migration hardening is complete.
 
 ## Phase 0 - Baseline and Stabilize
 - Lock deployment target to 10.13.
