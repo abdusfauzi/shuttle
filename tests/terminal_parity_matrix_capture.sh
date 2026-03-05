@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPT_DIR="$ROOT_DIR/Shuttle/apple-scpt"
+SCRIPT_DIR="$ROOT_DIR/apple-scripts"
 DATE_UTC="$(date -u +%F_%H-%M-%SZ)"
 REPORT_FILE="$ROOT_DIR/tests/terminal-parity-matrix-capture-${DATE_UTC}.md"
 
@@ -15,6 +15,10 @@ append_row() {
     local row="$1"
     echo "$row" | tee -a "$REPORT_FILE"
 }
+
+total_cells=0
+passed_cells=0
+failed_cells=0
 
 run_osascript_file() {
     local terminal_label="$1"
@@ -35,9 +39,14 @@ run_osascript_file() {
 
     if [[ $rc -eq 0 ]]; then
         append_row "| $terminal_label | $open_mode | pass | rc=$rc | $script_output |"
+        passed_cells=$((passed_cells + 1))
     else
         append_row "| $terminal_label | $open_mode | fail | rc=$rc | $script_output |"
+        failed_cells=$((failed_cells + 1))
     fi
+
+    total_cells=$((total_cells + 1))
+    return $rc
 }
 
 run_ui_controlled_terminal() {
@@ -87,9 +96,14 @@ EOF
 
     if [[ $rc -eq 0 ]]; then
         append_row "| $terminal_label | $open_mode | pass | rc=$rc | $script_output |"
+        passed_cells=$((passed_cells + 1))
     else
         append_row "| $terminal_label | $open_mode | fail | rc=$rc | $script_output |"
+        failed_cells=$((failed_cells + 1))
     fi
+
+    total_cells=$((total_cells + 1))
+    return $rc
 }
 
 echo "# Terminal Parity Matrix Capture" > "$REPORT_FILE"
@@ -98,8 +112,20 @@ echo "Host macOS: $(sw_vers -productVersion)" >> "$REPORT_FILE"
 echo >> "$REPORT_FILE"
 
 echo "1) Preflight checks" | tee -a "$REPORT_FILE"
+set +e
 "$ROOT_DIR/tests/terminal_parity_resource_check.sh" | tee -a "$REPORT_FILE"
+resource_rc=${PIPESTATUS[0]:-0}
 "$ROOT_DIR/tests/terminal_parity_probe.sh" | tee -a "$REPORT_FILE"
+probe_rc=${PIPESTATUS[0]:-0}
+set -e
+
+if [[ $resource_rc -ne 0 || $probe_rc -ne 0 ]]; then
+    echo "Preflight failed; matrix execution skipped." | tee -a "$REPORT_FILE"
+    echo "Summary: total=$total_cells passed=$passed_cells failed=$failed_cells" | tee -a "$REPORT_FILE"
+    echo "Result: BLOCKED_ENVIRONMENT" | tee -a "$REPORT_FILE"
+    echo "Report: $REPORT_FILE" | tee -a "$REPORT_FILE"
+    exit 2
+fi
 echo >> "$REPORT_FILE"
 
 echo "2) Matrix execution" >> "$REPORT_FILE"
@@ -132,4 +158,12 @@ run_ui_controlled_terminal "Ghostty" "Ghostty" "current" "shuttle-matrix"
 run_osascript_file "Ghostty" "virtual" "$SCRIPT_DIR/virtual-with-screen.scpt" "shuttle-matrix" "Shuttle Matrix"
 
 echo >> "$REPORT_FILE"
-echo "Report: $REPORT_FILE"
+echo "Summary: total=${total_cells} passed=${passed_cells} failed=${failed_cells}" | tee -a "$REPORT_FILE"
+echo "Result: $(if [[ $failed_cells -eq 0 ]]; then echo PASS; else echo FAIL; fi)" | tee -a "$REPORT_FILE"
+echo "Report: $REPORT_FILE" | tee -a "$REPORT_FILE"
+
+if [[ $failed_cells -eq 0 ]]; then
+    exit 0
+else
+    exit 1
+fi
