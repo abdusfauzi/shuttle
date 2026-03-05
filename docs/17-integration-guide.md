@@ -3,7 +3,7 @@
 ## Terminal Integration Strategy
 - Terminal.app and iTerm: prefer script-based control using bundled `.scpt` assets.
 - Warp: UI automation fallback via AppleScript/System Events.
-- Ghostty: launch via `open -na Ghostty.app --args -e <command>`.
+- Ghostty: launch via `open` + guarded `--args -e` when needed, with UI-controlled fallback path when Automation permission is available.
 
 ## Integration Constraints
 - Some integrations depend on user-granted automation/accessibility permissions.

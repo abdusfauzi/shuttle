@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Ghostty command dispatch now avoids `open -na` instance fan-out and uses direct fallback execution when Automation permission is unavailable.
 - URL launch detection is now strict-scheme only (`://`) to avoid misclassifying shell commands (for example `ssh ...`) as Finder URLs.
 - About popup has refreshed spacing and now exposes separate links for original project and maintained fork.
-- Minimum supported macOS target is now `13.0` to reduce release bundle footprint.
+- Minimum supported macOS target is now `10.13` to support older supported environments with the Swift migration baseline.
 - @philippetev Changes to iTerm applescripts to fix issues with settings in iTerm's Preferences/General.
 - @anivon localize "Error parsing config" message when JSON is invalid.
 - @blackadmin version typos in about window.
@@ -51,7 +51,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Pending
 - The ability to add a second json.config file.
-- Terminal parity matrix (M-004): live cell verification pending interactive macOS session with Automation/Accessibility permissions.
 
 ## [1.2.9] - 2016-10-18
 ### Added

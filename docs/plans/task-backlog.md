@@ -32,6 +32,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-005 | Retire remaining Objective-C path for launch-at-login and remove bridging header | Phase 4 | done | P1 | unassigned | 2026-03-19 | M-002, M-003 | 2026-02-26 | Active target now uses `LaunchAtLoginController.swift` and `main.swift`; Objective-C app/launch sources and bridging header are removed from build graph. |
 | M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | done | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-03-06 | Legacy Objective-C runtime files and old bridging/prefix headers removed; AppleScript compile helpers are now root-relative (`./apple-scripts/compile-all.sh`) and stale duplicate script sources are removed. Added `./tests/regression_suite.sh` as a one-shot preflight/smoke/build runner with blocked-environment signaling and `./tests/path_hygiene_check.sh` for workstation-path guardrails. Updated stale XIB metadata from `AppDelegate.h` reference to `AppDelegate.swift`. Added `docs/plans/release-checklist.md` and refreshed `CHANGELOG.md` Unreleased migration notes. Hardened `tests/path_hygiene_check.sh` by replacing user-specific workstation paths with portable regex-style patterns. |
 | M-007 | Archive deprecated legacy scripts and old runtime artifacts for migration completion | Phase 5 | done | P3 | unassigned | 2026-03-20 | M-006 | 2026-03-06 | Migrated inactive legacy Warp AppleScript sources and compile helpers into `archive/legacy-scripts/`, removed legacy Warp `.scpt` outputs from active resource set, and updated compile/test policy to exclude archived scripts from active flow. |
+| M-008 | Align docs/changelog with current runtime behavior and platform baseline | Documentation | done | P2 | unassigned | 2026-03-06 | M-007 | 2026-03-06 | Updated `docs/17-integration-guide.md` and `CHANGELOG.md` to remove stale `open -na` guidance and correct target/pending entries. |
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
@@ -39,6 +40,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A refactor to a modern ServiceManagement-based helper is deferred to the next major migration cycle.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-008` with docs/changelog alignment for Ghostty launch behavior, macOS target baseline, and stale parity-pending entries.
 - 2026-03-06: Completed `M-004` parity matrix capture in interactive macOS session; all 20 cells passed. Evidence: `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`.
 - 2026-03-06: Completed `M-006` hardening scope end-to-end (cleanup, regression suite, path hygiene, and parity evidence).
 - 2026-03-06: Updated `tests/terminal_parity_matrix_capture.sh` to include pass/fail counters, exit status summary, and restore runtime script path targeting for compiled script artifacts under `Shuttle/apple-scpt`.
@@ -66,6 +68,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Completed `M-008` to keep documentation/changelog aligned with production behavior and avoid stale operational instructions.
 - 2026-03-06: Marked `M-004` complete after automated interactive matrix capture produced all-pass results in a controlled macOS session.
 - 2026-03-06: Marked `M-006` complete after parity hardening, regression harness, and path-hygiene gates reached stable pass states.
 - 2026-02-25: Canonical backlog file is `docs/plans/task-backlog.md` to centralize look-back references.
