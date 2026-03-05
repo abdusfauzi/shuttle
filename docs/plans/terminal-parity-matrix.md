@@ -103,3 +103,17 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 - Smoke step: `pass` (`MANUAL_MATRIX_REQUIRED`)
 - Build: `pass` (`xcodebuild` succeeded)
 - Outcome: `REGRESSION_PASS`
+
+## Manual Matrix Execution Checklist
+- Precondition: run `./tests/regression_suite.sh` with `MANUAL_MATRIX_REQUIRED` and ensure Terminal, iTerm (stable/nightly), Warp, Ghostty automation/config permissions are granted.
+- Sequence:
+  - Terminal.app: `new`, `tab`, `current`, `virtual`
+  - iTerm stable: `new`, `tab`, `current`, `virtual`
+  - iTerm nightly: `new`, `tab`, `current`, `virtual`
+  - Warp: `new`, `tab`, `current`, `virtual`
+  - Ghostty: `new`, `tab`, `current`, `virtual`
+- For each cell:
+  - capture observed command launch target
+  - capture failure reason if any
+  - log: timestamp, macOS build, terminal version, and evidence text
+- Update matrix status values as `pass`/`fail`/`blocked` and add exact error message in notes.
