@@ -16,7 +16,7 @@
 ## Migration Requirements
 - Minimum OS support: macOS 10.13.
 - Target architecture: fully native Swift source for app logic.
-- Objective-C allowed only temporarily during phased migration.
+- Objective-C runtime migration is complete for active app logic/build path.
 - Existing user config format remains backward compatible.
 
 ## Non-Functional Requirements
