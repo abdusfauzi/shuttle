@@ -39,6 +39,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - Full matrix validation still requires manual interactive execution across all terminal/mode cells.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Corrected `tests/terminal_parity_matrix_capture.sh` to load AppleScripts from the canonical `apple-scripts/` directory and added pass/fail counters + exit status summary output in the generated matrix report.
 - 2026-03-06: Added manual execution checklist to `docs/plans/terminal-parity-matrix.md` and updated `M-004` task notes for deterministic cell-by-cell parity evidence capture.
 - 2026-03-06: Added `tests/terminal_parity_matrix_capture.sh` to produce full parity matrix evidence output for 10 terminal/mode cells.
 - 2026-03-06: Hardened `tests/path_hygiene_check.sh` to detect workstation-specific paths with user-agnostic patterns and remove hardcoded user directory references.
