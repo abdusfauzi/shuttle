@@ -14,10 +14,10 @@ if [[ "$rc" -ne 0 ]]; then
     exit 1
 fi
 
-if [[ "$output" != *"Skipping Warp legacy helper compilation"* ]]; then
-    echo "FAIL: compile-all.sh did not report Warp legacy skip policy" >&2
+if [[ "$output" != *"Legacy Warp helper compilation is archived and not part of active build/test paths."* ]]; then
+    echo "FAIL: compile-all.sh did not report Warp legacy archival policy" >&2
     echo "$output" >&2
     exit 1
 fi
 
-echo "OK: compile-all.sh skips legacy Warp helpers by default."
+echo "OK: compile-all.sh excludes archived Warp legacy helpers from active build/test paths."

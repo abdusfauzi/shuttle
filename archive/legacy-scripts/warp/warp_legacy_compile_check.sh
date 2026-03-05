@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="$ROOT_DIR/Shuttle/apple-scpt"
 
-"$ROOT_DIR/apple-scripts/compile-WarpStable.sh"
+"$ROOT_DIR/archive/legacy-scripts/warp/compile-WarpStable.sh"
 
 required_outputs=(
     "Warp-stable-new-window.scpt"
@@ -19,4 +19,4 @@ for filename in "${required_outputs[@]}"; do
     fi
 done
 
-echo "OK: legacy Warp AppleScript helpers compile successfully."
+echo "OK: archived legacy Warp AppleScript helpers compile successfully."

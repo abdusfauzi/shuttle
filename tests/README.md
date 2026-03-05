@@ -7,3 +7,8 @@
 - `regression_suite.sh`: one-shot regression runner for path hygiene + parity scripts + `xcodebuild`.
   - Use `./tests/regression_suite.sh --with-compile` to include `./apple-scripts/compile-all.sh` at the start.
 - `terminal_parity_matrix_capture.sh`: runs the full parity cell matrix and writes `tests/terminal-parity-matrix-capture-<timestamp>.md` with per-cell pass/fail evidence.
+- `compile_all_policy_check.sh`: validates that `compile-all.sh` excludes archived legacy scripts from active flow.
+
+Archived legacy script checks and sources are retained under:
+
+- `archive/legacy-scripts/warp/` (Warp legacy script helpers and optional legacy compile check)
