@@ -11,8 +11,11 @@ if ! command -v rg >/dev/null 2>&1; then
 fi
 
 patterns=(
-    "/Users/abdusfauzi/Workspaces"
-    "/User/abdusfauz/Workspaces"
+    '/Users/.*/Workspaces'
+    '/Users/.*/Workspaces/'
+    '/Users/.*/Workspaces/shuttle'
+    '/Users/.*/Git'
+    '/Users/.*/Git/'
     "~/Git/shuttle"
     "~/Workspaces/shuttle"
 )
