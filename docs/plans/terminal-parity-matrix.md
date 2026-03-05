@@ -8,7 +8,7 @@ Track behavior parity for command dispatch across supported terminals and open m
 - Modes: `new`, `tab`, `current`, `virtual`
 
 ## Overall Status
-- `in_progress`: automation capability checks now pass in interactive macOS session; complete manual matrix to produce pass/fail cell results.
+- `completed`: parity matrix captured successfully for all terminals and modes in an interactive macOS session.
 
 ## Preconditions
 - App builds successfully on current branch.
@@ -34,11 +34,11 @@ When running in an interactive automation-capable machine, capture the full matr
 
 | Terminal | new | tab | current | virtual | Notes |
 |---|---|---|---|---|---|
-| Terminal.app | pending | pending | pending | pending | AppleScript-backed; app presence verified (2026-02-26 probe) |
-| iTerm (stable) | pending | pending | pending | pending | AppleScript-backed; app presence verified (2026-02-26 probe) |
-| iTerm (nightly) | pending | pending | pending | pending | AppleScript-backed; uses same app binary as stable; presence verified (2026-02-26 probe) |
-| Warp | pending | pending | pending | pending | UI automation + virtual script path; app presence verified (2026-02-26 probe) |
-| Ghostty | pending | pending | pending | pending | `open -na Ghostty.app --args -e` + virtual script path; app presence verified (2026-02-26 probe) |
+| Terminal.app | pass | pass | pass | pass | 2026-03-06 capture pass |
+| iTerm (stable) | pass | pass | pass | pass | 2026-03-06 capture pass |
+| iTerm (nightly) | pass | pass | pass | pass | 2026-03-06 capture pass |
+| Warp | pass | pass | pass | pass | 2026-03-06 capture pass |
+| Ghostty | pass | pass | pass | pass | 2026-03-06 capture pass |
 
 Status values: `pending`, `pass`, `fail`, `blocked`
 
@@ -101,6 +101,13 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 - AppleScript handler invocation checks: `pass` (`rc=0` for Terminal/iTerm/virtual script dispatch)
 - Outcome: `MANUAL_MATRIX_REQUIRED`
 - Interpretation: environment is capable of automation; next step is filling parity matrix cells with per-terminal/per-mode behavioral verification evidence.
+
+## Latest Matrix Capture (2026-03-06, Interactive macOS)
+- Command: `./tests/terminal_parity_matrix_capture.sh`
+- Report: `./tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`
+- Host macOS: `26.3.1`
+- Result: `PASS`
+- Cells: `20/20`
 
 ## Latest Regression Suite Attempt (2026-02-26, Interactive macOS)
 - Command: `./tests/regression_suite.sh`

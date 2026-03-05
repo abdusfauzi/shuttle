@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPT_DIR="$ROOT_DIR/apple-scripts"
+SCRIPT_DIR="$ROOT_DIR/Shuttle/apple-scpt"
 DATE_UTC="$(date -u +%F_%H-%M-%SZ)"
 REPORT_FILE="$ROOT_DIR/tests/terminal-parity-matrix-capture-${DATE_UTC}.md"
 

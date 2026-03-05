@@ -42,6 +42,6 @@ This folder tracks the migration of Shuttle to fully native Swift on macOS 10.13
 - Terminal targets: Terminal.app, iTerm, Warp, Ghostty.
 - Deployment target: macOS 10.13+.
 - Migration state: active build/runtime path is Swift-native.
-- Terminal routing state: backend strategy isolation implemented in `TerminalRouter`; parity matrix execution in progress.
+- Terminal routing state: backend strategy isolation implemented in `TerminalRouter`; parity matrix execution completed and behavior parity for supported terminals is validated.
 - Launch-at-login state: active runtime path is Swift (`LaunchAtLoginController.swift`).
 - Entry/runtime state: active target build graph is Swift-only (`main.swift`, Swift services/controllers).

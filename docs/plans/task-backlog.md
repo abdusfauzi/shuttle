@@ -28,18 +28,20 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 |---|---|---|---|---|---|---|---|---|---|
 | M-002 | Extract `ConfigService`, `SSHConfigParser`, `MenuBuilder`, `TerminalRouter` from `AppDelegate.swift` | Phase 2 | done | P0 | unassigned | 2026-03-05 | M-001 | 2026-02-26 | Implemented in `Shuttle/AppServices.swift`, with `AppDelegate.swift` reduced to orchestration and action wiring. |
 | M-003 | Implement terminal backend isolation strategy for Terminal.app, iTerm, Warp, Ghostty, Virtual | Phase 3 | done | P0 | unassigned | 2026-03-12 | M-002 | 2026-02-26 | `TerminalRouter` now dispatches through terminal-specific backend strategy types with centralized mode normalization. |
-| M-004 | Execute full terminal behavior parity matrix across all open modes and supported terminals | Testing | in_progress | P0 | unassigned | 2026-03-14 | M-003 | 2026-03-06 | Matrix runbook was expanded with a step-by-step manual execution checklist and evidence capture requirements. Added `tests/terminal_parity_matrix_capture.sh` for one-shot per-cell execution and evidence row capture. Automation gates are healthy; manual per-cell validation remains. |
+| M-004 | Execute full terminal behavior parity matrix across all open modes and supported terminals | Testing | done | P0 | unassigned | 2026-03-14 | M-003 | 2026-03-06 | Matrix capture completed in interactive macOS session with all 20/20 cells passing across Terminal, iTerm stable/nightly, Warp, and Ghostty. Evidence: `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`. |
 | M-005 | Retire remaining Objective-C path for launch-at-login and remove bridging header | Phase 4 | done | P1 | unassigned | 2026-03-19 | M-002, M-003 | 2026-02-26 | Active target now uses `LaunchAtLoginController.swift` and `main.swift`; Objective-C app/launch sources and bridging header are removed from build graph. |
-| M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | in_progress | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-03-06 | Legacy Objective-C runtime files and old bridging/prefix headers removed; AppleScript compile helpers are now root-relative (`./apple-scripts/compile-all.sh`) and stale duplicate script sources are removed. Added `./tests/regression_suite.sh` as a one-shot preflight/smoke/build runner with blocked-environment signaling and `./tests/path_hygiene_check.sh` for workstation-path guardrails. Updated stale XIB metadata from `AppDelegate.h` reference to `AppDelegate.swift`. Added `docs/plans/release-checklist.md` and refreshed `CHANGELOG.md` Unreleased migration notes. Hardened `tests/path_hygiene_check.sh` by replacing user-specific workstation paths with portable regex-style patterns. |
+| M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | done | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-03-06 | Legacy Objective-C runtime files and old bridging/prefix headers removed; AppleScript compile helpers are now root-relative (`./apple-scripts/compile-all.sh`) and stale duplicate script sources are removed. Added `./tests/regression_suite.sh` as a one-shot preflight/smoke/build runner with blocked-environment signaling and `./tests/path_hygiene_check.sh` for workstation-path guardrails. Updated stale XIB metadata from `AppDelegate.h` reference to `AppDelegate.swift`. Added `docs/plans/release-checklist.md` and refreshed `CHANGELOG.md` Unreleased migration notes. Hardened `tests/path_hygiene_check.sh` by replacing user-specific workstation paths with portable regex-style patterns. |
 
 ## Blockers and Risks
-- Launch-at-login still relies on deprecated `LSSharedFileList*` APIs (now wrapped in Swift for macOS 10.13 compatibility) and should migrate to ServiceManagement with helper architecture in a future major change.
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
-- Full matrix validation still requires manual interactive execution across all terminal/mode cells.
+- Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A refactor to a modern ServiceManagement-based helper is deferred to the next major migration cycle.
 
 ## Completed Log (Newest First)
-- 2026-03-06: Corrected `tests/terminal_parity_matrix_capture.sh` to load AppleScripts from the canonical `apple-scripts/` directory and added pass/fail counters + exit status summary output in the generated matrix report.
+- 2026-03-06: Completed `M-004` parity matrix capture in interactive macOS session; all 20 cells passed. Evidence: `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`.
+- 2026-03-06: Completed `M-006` hardening scope end-to-end (cleanup, regression suite, path hygiene, and parity evidence).
+- 2026-03-06: Updated `tests/terminal_parity_matrix_capture.sh` to include pass/fail counters, exit status summary, and restore runtime script path targeting for compiled script artifacts under `Shuttle/apple-scpt`.
+- 2026-03-06: Corrected `tests/terminal_parity_matrix_capture.sh` to load AppleScripts from the canonical project script bundle and added pass/fail counters + exit status summary output in the generated matrix report.
 - 2026-03-06: Added manual execution checklist to `docs/plans/terminal-parity-matrix.md` and updated `M-004` task notes for deterministic cell-by-cell parity evidence capture.
 - 2026-03-06: Added `tests/terminal_parity_matrix_capture.sh` to produce full parity matrix evidence output for 10 terminal/mode cells.
 - 2026-03-06: Hardened `tests/path_hygiene_check.sh` to detect workstation-specific paths with user-agnostic patterns and remove hardcoded user directory references.
@@ -62,6 +64,8 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Marked `M-004` complete after automated interactive matrix capture produced all-pass results in a controlled macOS session.
+- 2026-03-06: Marked `M-006` complete after parity hardening, regression harness, and path-hygiene gates reached stable pass states.
 - 2026-02-25: Canonical backlog file is `docs/plans/task-backlog.md` to centralize look-back references.
 - 2026-02-25: Scope remains backlog-only reorganization; numbered docs (`08`, `09`, `10`) stay in place.
 - 2026-02-25: Default owner value is `unassigned` until explicit assignment.
@@ -75,5 +79,5 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-26: AppleScript compile tooling is root-relative (`./apple-scripts/compile-all.sh`) to avoid workstation-specific path coupling.
 
 ## Next Review Checkpoint
-- Date: 2026-03-07
-- Focus: Run M-004 matrix on interactive macOS session to clear blocked state, then complete release hardening (M-006).
+- Date: 2026-03-12
+- Focus: Validate release readiness and complete final release checklist.
