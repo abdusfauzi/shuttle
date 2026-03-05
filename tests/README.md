@@ -6,3 +6,4 @@
 - `terminal_parity_smoke.sh`: runs preflight + AppleScript handler dispatch + GUI capability checks.
 - `regression_suite.sh`: one-shot regression runner for path hygiene + parity scripts + `xcodebuild`.
   - Use `./tests/regression_suite.sh --with-compile` to include `./apple-scripts/compile-all.sh` at the start.
+- `terminal_parity_matrix_capture.sh`: runs the full parity cell matrix and writes `tests/terminal-parity-matrix-capture-<timestamp>.md` with per-cell pass/fail evidence.

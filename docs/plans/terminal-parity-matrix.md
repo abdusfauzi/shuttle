@@ -24,6 +24,12 @@ Run resource and routing marker check before manual validation:
 ./tests/terminal_parity_resource_check.sh
 ```
 
+When running in an interactive automation-capable machine, capture the full matrix with:
+
+```bash
+./tests/terminal_parity_matrix_capture.sh
+```
+
 ## Matrix
 
 | Terminal | new | tab | current | virtual | Notes |
