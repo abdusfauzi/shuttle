@@ -24,6 +24,7 @@ Quick preflight:
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
 - `./tests/terminal_parity_smoke.sh`
+- `./tests/terminal_parity_matrix_check.sh` (checks latest matrix report for PASS status and full cell completion)
 - `./tests/regression_suite.sh` (runs path hygiene + parity preflight + smoke + build; returns `2` if environment blocks GUI automation)
 - `./tests/security_review_check.sh` (verifies command-safety checks and security guard presence in source flow)
 

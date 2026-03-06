@@ -34,8 +34,9 @@ echo "2) Security review checks"
 "$ROOT_DIR/tests/security_review_check.sh"
 echo
 
+echo "3) AppleScript compile (optional)"
 if [[ "$WITH_COMPILE" -eq 1 ]]; then
-    echo "3) Recompile AppleScript resources"
+    echo "   Requested: recompiling."
     set +e
     "$ROOT_DIR/apple-scripts/compile-all.sh"
     compile_rc=$?
@@ -46,8 +47,10 @@ if [[ "$WITH_COMPILE" -eq 1 ]]; then
         echo "Result: FAIL (compile step)" >&2
         exit "$compile_rc"
     fi
-    echo
+else
+    echo "   Skipped: add --with-compile to run."
 fi
+echo
 
 echo "4) Terminal parity preflight"
 "$ROOT_DIR/tests/terminal_parity_resource_check.sh"
@@ -67,7 +70,11 @@ elif [[ "$smoke_rc" -ne 0 ]]; then
 fi
 echo
 
-echo "6) Build validation"
+echo "6) Latest parity matrix evidence check"
+"$ROOT_DIR/tests/terminal_parity_matrix_check.sh"
+echo
+
+echo "7) Build validation"
 xcodebuild \
     -project "$ROOT_DIR/Shuttle.xcodeproj" \
     -scheme Shuttle \

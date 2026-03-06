@@ -5,7 +5,8 @@
 - `terminal_parity_resource_check.sh`: verifies required compiled `.scpt` resources and terminal-routing markers.
 - `terminal_parity_probe.sh`: verifies preflight and installed terminal app presence/version.
 - `terminal_parity_smoke.sh`: runs preflight + AppleScript handler dispatch + GUI capability checks.
-- `regression_suite.sh`: one-shot regression runner for path hygiene + parity scripts + `xcodebuild`.
+- `terminal_parity_matrix_check.sh`: verifies the latest captured matrix report exists and is marked `PASS` with full cell count.
+- `regression_suite.sh`: one-shot regression runner for path hygiene + parity scripts + matrix evidence + `xcodebuild`.
   - Use `./tests/regression_suite.sh --with-compile` to include `./apple-scripts/compile-all.sh` at the start.
 - `terminal_parity_matrix_capture.sh`: runs the full parity cell matrix and writes `tests/terminal-parity-matrix-capture-<timestamp>.md` with per-cell pass/fail evidence.
 - `compile_all_policy_check.sh`: validates that `compile-all.sh` excludes archived legacy scripts from active flow.

@@ -24,10 +24,11 @@ Final pre-release checklist for the Swift migration branch.
 | 4 | Security regression check | `./tests/security_review_check.sh` | Security guard presence checks all pass | pass | 2026-03-06 run |
 | 5 | AppleScript compile (if source changed) | `./apple-scripts/compile-all.sh` | Scripts compile; no `BLOCKED_ENVIRONMENT` | pass | 2026-03-06 run |
 | 6 | Smoke parity gate | `./tests/terminal_parity_smoke.sh` | Returns `MANUAL_MATRIX_REQUIRED` in interactive environment | pass | 2026-03-06 run |
-| 7 | Full regression suite | `./tests/regression_suite.sh` (and `--with-compile` when needed) | `REGRESSION_PASS` in interactive environment | pass | 2026-03-06 run; skip `--with-compile` unless script sources changed |
-| 8 | Build validation | `xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Debug -sdk macosx -derivedDataPath /tmp/ShuttleDerivedData build` | `** BUILD SUCCEEDED **` | pass | 2026-03-06 run |
-| 9 | Manual terminal parity matrix | Follow `docs/plans/terminal-parity-matrix.md` and fill all cells | Matrix cells recorded as pass/fail/blocked with evidence | pass | `PASS` evidence: `20/20` in `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md` |
+| 7 | Matrix evidence check | `./tests/terminal_parity_matrix_check.sh` | Latest capture report exists and is `PASS` (20/20 expected) | pass | 2026-03-06 run |
+| 8 | Full regression suite | `./tests/regression_suite.sh` (and `--with-compile` when needed) | `REGRESSION_PASS` in interactive environment | pass | 2026-03-06 run; skip `--with-compile` unless script sources changed |
+| 9 | Build validation | `xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Debug -sdk macosx -derivedDataPath /tmp/ShuttleDerivedData build` | `** BUILD SUCCEEDED **` | pass | 2026-03-06 run |
+| 10 | Manual terminal parity matrix | Follow `docs/plans/terminal-parity-matrix.md` and fill all cells | Matrix cells recorded as pass/fail/blocked with evidence | pass | `PASS` evidence: `20/20` in `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md` |
 
 ## Release Decision Gate
-- Release is **go** only when checks `1-9` are either `pass` or explicitly accepted as `blocked` with rationale.
+- Release is **go** only when checks `1-10` are either `pass` or explicitly accepted as `blocked` with rationale.
 - For migration completion, M-004 is now resolved from `blocked` to pass/fail evidence in an interactive macOS run.

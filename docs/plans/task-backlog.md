@@ -36,6 +36,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-009 | Complete in-depth security review and patch identified command-safety gaps for host, editor, and terminal launches | Security | done | P1 | unassigned | 2026-03-06 | M-008 | 2026-03-06 | Added threat model, command-handling review, and remediation in Swift command safety paths. |
 | M-010 | Quarantine SSH host aliases before composing terminal commands | Security/Hardening | done | P1 | unassigned | 2026-03-06 | M-009 | 2026-03-06 | Implemented alias validation and shell-safe quoting for SSH-derived `cmd` entries to prevent command injection through host names. |
 | M-011 | Add security review automation checks to regression gate | Testing/Security | done | P2 | unassigned | 2026-03-06 | M-010 | 2026-03-06 | Added `docs/21-security-review.md`, `tests/security_review_check.sh`, and integrated the check into `tests/regression_suite.sh`. |
+| M-012 | Add matrix evidence verification step to regression suite and docs | Testing/Quality | done | P2 | unassigned | 2026-03-06 | M-011 | 2026-03-06 | Added `tests/terminal_parity_matrix_check.sh` and integrated it into `tests/regression_suite.sh`, docs, and release checklist so parity matrix capture evidence is validated as part of the automated loop. |
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
@@ -45,6 +46,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 
 ## Completed Log (Newest First)
 - 2026-03-06: Completed `M-011` by adding `tests/security_review_check.sh` and wiring it into `./tests/regression_suite.sh`.
+- 2026-03-06: Completed `M-012` by adding `tests/terminal_parity_matrix_check.sh`, integrating it into `./tests/regression_suite.sh`, and updating release/testing docs/checklists for matrix evidence verification.
 - 2026-03-06: Completed `M-010` and `M-009` security hardening pass with host-aliased SSH commands now escaped as shell-safe single-quoted arguments and command safety checks in `Shuttle/AppServices.swift`.
 - 2026-03-06: Added `docs/21-security-review.md` to document threat model, residual risks, mitigation mapping, and verification evidence.
 - 2026-03-06: Completed `M-008` with docs/changelog alignment for Ghostty launch behavior, macOS target baseline, and stale parity-pending entries.
