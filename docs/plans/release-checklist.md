@@ -28,7 +28,9 @@ Final pre-release checklist for the Swift migration branch.
 | 8 | Full regression suite | `./tests/regression_suite.sh` (and `--with-compile` when needed) | `REGRESSION_PASS` in interactive environment | pass | 2026-03-06 run; skip `--with-compile` unless script sources changed |
 | 9 | Build validation | `xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Debug -sdk macosx -derivedDataPath /tmp/ShuttleDerivedData build` | `** BUILD SUCCEEDED **` | pass | 2026-03-06 run |
 | 10 | Manual terminal parity matrix | Follow `docs/plans/terminal-parity-matrix.md` and fill all cells | Matrix cells recorded as pass/fail/blocked with evidence | pass | `PASS` evidence: `20/20` in `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md` |
+| 11 | Release deployment target guard | `./tests/footprint_deployment_target_check.sh` | Release target remains `10.13` | pass | 2026-03-06 run |
+| 12 | Release footprint guard | `xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Release -sdk macosx -derivedDataPath /tmp/ShuttleSignedBuild build` then `./tests/release_bundle_size_check.sh` | Release bundle stays within Swift-on-10.13 footprint limits and contains no unexpected non-Swift frameworks | pass | 2026-03-06 run |
 
 ## Release Decision Gate
-- Release is **go** only when checks `1-10` are either `pass` or explicitly accepted as `blocked` with rationale.
+- Release is **go** only when checks `1-12` are either `pass` or explicitly accepted as `blocked` with rationale.
 - For migration completion, M-004 is now resolved from `blocked` to pass/fail evidence in an interactive macOS run.

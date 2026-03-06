@@ -8,7 +8,8 @@
 - Run `./apple-scripts/compile-all.sh` from an interactive macOS session only when legacy `.applescript` artifacts are edited for archival/reference parity.
 - Entitlements and signing are valid.
 - `./tests/regression_suite.sh` completes with `REGRESSION_PASS` (or `REGRESSION_BLOCKED_ENVIRONMENT` only in known sandbox contexts).
-- Clean signed release build footprint check passes (`rm -rf /tmp/ShuttleSignedBuild` then `./tests/release_bundle_size_check.sh`).
+- Clean release build footprint check passes (`xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Release -sdk macosx -derivedDataPath /tmp/ShuttleSignedBuild build` then `./tests/release_bundle_size_check.sh`).
+- For macOS `10.13`, embedded `libswift*.dylib` files in `Contents/Frameworks` are expected; the footprint check guards for unexpected non-Swift frameworks and bundle-size regression instead of requiring zero frameworks.
 - First-run onboarding preflight validates required setup:
   - Missing permissions/config show the setup card before shortcut execution.
   - `Open Privacy Settings` opens Security/Privacy panes.

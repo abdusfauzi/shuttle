@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-03-06
+
 ### Added
 - Added support for selecting Warp and Ghostty as terminal backends.
 - Added `virtual` open mode backed by `screen` for background command execution.
