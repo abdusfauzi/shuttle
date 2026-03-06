@@ -848,7 +848,7 @@ final class TerminalRouter {
     private struct ExecutionServices {
         let scripts: ScriptCatalog
         let handlerName: String
-        let runScript: (_ scriptPath: String?, _ handlerName: String, _ parameters: [String]) -> Void
+        let runScript: (_ scriptPath: String?, _ handlerName: String, _ parameters: [String]) -> Bool
         let runUIControlledTerminal: (_ terminalName: String, _ command: String, _ terminalWindow: String, _ errorHandler: ErrorHandler) -> Void
         let runGhosttyDirect: (_ command: String, _ errorHandler: ErrorHandler) -> Void
     }
@@ -864,7 +864,13 @@ final class TerminalRouter {
     private struct TerminalAppBackend: TerminalBackend {
         func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
             let scriptPath = services.scripts.terminalScript(for: request.mode)
-            services.runScript(scriptPath, services.handlerName, request.scriptParameters)
+            if !services.runScript(scriptPath, services.handlerName, request.scriptParameters) {
+                errorHandler(
+                    "Unable to run Terminal.app script",
+                    NSLocalizedString("The terminal script is missing or failed to load/execute.", comment: ""),
+                    false
+                )
+            }
             return nil
         }
     }
@@ -872,7 +878,17 @@ final class TerminalRouter {
     private struct WarpBackend: TerminalBackend {
         func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
             if request.mode == .virtual {
-                services.runScript(services.scripts.terminalVirtualWithScreen, services.handlerName, request.scriptParameters)
+                if !services.runScript(
+                    services.scripts.terminalVirtualWithScreen,
+                    services.handlerName,
+                    request.scriptParameters
+                ) {
+                    errorHandler(
+                        "Unable to run Ghostty/iTerm virtual script",
+                        NSLocalizedString("The terminal script is missing or failed to load/execute.", comment: ""),
+                        false
+                    )
+                }
             } else {
                 services.runUIControlledTerminal("Warp", request.command, request.mode.rawValue, errorHandler)
             }
@@ -883,7 +899,17 @@ final class TerminalRouter {
     private struct GhosttyBackend: TerminalBackend {
         func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
             if request.mode == .virtual {
-                services.runScript(services.scripts.terminalVirtualWithScreen, services.handlerName, request.scriptParameters)
+                if !services.runScript(
+                    services.scripts.terminalVirtualWithScreen,
+                    services.handlerName,
+                    request.scriptParameters
+                ) {
+                    errorHandler(
+                        "Unable to run Ghostty virtual script",
+                        NSLocalizedString("The terminal script is missing or failed to load/execute.", comment: ""),
+                        false
+                    )
+                }
             } else {
                 services.runUIControlledTerminal("Ghostty", request.command, request.mode.rawValue) { message, info, canContinue in
                     if info.contains("Not authorized to send Apple events to System Events") {
@@ -922,7 +948,13 @@ final class TerminalRouter {
             }
 
             let scriptPath = services.scripts.iTermScript(version: resolvedVersion, mode: request.mode)
-            services.runScript(scriptPath, services.handlerName, request.scriptParameters)
+            if !services.runScript(scriptPath, services.handlerName, request.scriptParameters) {
+                errorHandler(
+                    "Unable to run iTerm script",
+                    NSLocalizedString("The iTerm AppleScript is missing or failed to load/execute.", comment: ""),
+                    false
+                )
+            }
 
             return DispatchResult(updatedITermVersionPref: resolvedVersion)
         }
@@ -1051,7 +1083,7 @@ final class TerminalRouter {
             scripts: scripts,
             handlerName: "scriptRun",
             runScript: { [weak self] scriptPath, handlerName, parameters in
-                self?.runScript(scriptPath: scriptPath, handler: handlerName, parameters: parameters)
+                self?.runScript(scriptPath: scriptPath, handler: handlerName, parameters: parameters) ?? false
             },
             runUIControlledTerminal: { [weak self] terminalName, command, terminalWindow, errorHandler in
                 self?.runCommandInUIControlledTerminal(
@@ -1068,6 +1100,15 @@ final class TerminalRouter {
     }
 
     private func runCommandInGhosttyDirect(command: String, errorHandler: (String, String, Bool) -> Void) {
+        guard SecurityPolicies.isSafeCommand(command) else {
+            errorHandler(
+                "Blocked command",
+                NSLocalizedString("The selected command is unsafe or too long for direct Ghostty launch.", comment: ""),
+                false
+            )
+            return
+        }
+
         do {
             let openTask = Process()
             openTask.executableURL = URL(fileURLWithPath: "/usr/bin/open")
@@ -1078,13 +1119,15 @@ final class TerminalRouter {
         }
     }
 
-    private func runScript(scriptPath: String?, handler handlerName: String, parameters parametersInArray: [String]) {
+    private func runScript(scriptPath: String?, handler handlerName: String, parameters parametersInArray: [String]) -> Bool {
         guard let scriptPath else {
-            return
+            NSLog("Blocked: attempted to run missing script for handler %@", handlerName)
+            return false
         }
 
         guard let appleScript = cachedScript(at: scriptPath) else {
-            return
+            NSLog("Failed to load terminal script %@", scriptPath)
+            return false
         }
 
         if !handlerName.isEmpty {
@@ -1094,7 +1137,7 @@ final class TerminalRouter {
                 bytes: &pid,
                 length: MemoryLayout.size(ofValue: pid)
             ) else {
-                return
+                return false
             }
 
             let kASAppleScriptSuite = fourCharCode(from: "ascr")
@@ -1119,8 +1162,12 @@ final class TerminalRouter {
                 containerEvent.setParam(arguments, forKeyword: keyDirectObject)
             }
 
-            _ = appleScript.executeAppleEvent(containerEvent, error: nil)
+            var scriptError: NSDictionary?
+            _ = appleScript.executeAppleEvent(containerEvent, error: &scriptError)
+            return scriptError == nil
         }
+
+        return true
     }
 
     private func cachedScript(at path: String) -> NSAppleScript? {
@@ -1174,8 +1221,16 @@ final class TerminalRouter {
 
         var scriptError: NSDictionary?
         let appleScript = NSAppleScript(source: scriptSource)
-        _ = appleScript?.executeAndReturnError(&scriptError)
+        guard let appleScript else {
+            errorHandler(
+                "Unable to execute terminal control script",
+                NSLocalizedString("Failed to instantiate a terminal control AppleScript.", comment: ""),
+                false
+            )
+            return
+        }
 
+        _ = appleScript.executeAndReturnError(&scriptError)
         if scriptError != nil {
             let errorMessage = "Unable to run command in \(terminalName)."
             let errorInfo = (scriptError?[NSAppleScript.errorMessage] as? String)

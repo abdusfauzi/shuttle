@@ -37,6 +37,8 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-010 | Quarantine SSH host aliases before composing terminal commands | Security/Hardening | done | P1 | unassigned | 2026-03-06 | M-009 | 2026-03-06 | Implemented alias validation and shell-safe quoting for SSH-derived `cmd` entries to prevent command injection through host names. |
 | M-011 | Add security review automation checks to regression gate | Testing/Security | done | P2 | unassigned | 2026-03-06 | M-010 | 2026-03-06 | Added `docs/21-security-review.md`, `tests/security_review_check.sh`, and integrated the check into `tests/regression_suite.sh`. |
 | M-012 | Add matrix evidence verification step to regression suite and docs | Testing/Quality | done | P2 | unassigned | 2026-03-06 | M-011 | 2026-03-06 | Added `tests/terminal_parity_matrix_check.sh` and integrated it into `tests/regression_suite.sh`, docs, and release checklist so parity matrix capture evidence is validated as part of the automated loop. |
+| M-013 | Add terminal script execution failure propagation in router error path | Security/Stability | done | P1 | unassigned | 2026-03-06 | M-012 | 2026-03-06 | Router now treats missing/failed AppleScript dispatch as an actionable error instead of silent no-op and returns `runHost` feedback through the existing error handler. |
+| M-014 | Extend security regression coverage for launch policy and fallback paths | Security | done | P1 | unassigned | 2026-03-06 | M-013 | 2026-03-06 | Added regression coverage for URL-launch detection, launch-at-login pointer-safety, and Ghostty launch-policy fallback checks to the security step in `regression_suite.sh`. |
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
@@ -45,6 +47,8 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A modern helper is deferred until a compatibility-safe migration path is confirmed.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-014` by adding URL launch detection/launch-at-login/Ghostty policy checks to the security gate and documenting them in test readme/docs.
+- 2026-03-06: Completed `M-013` by making terminal script dispatch return explicit failure states and surfacing failures to users through `errorHandler`.
 - 2026-03-06: Completed `M-011` by adding `tests/security_review_check.sh` and wiring it into `./tests/regression_suite.sh`.
 - 2026-03-06: Completed `M-012` by adding `tests/terminal_parity_matrix_check.sh`, integrating it into `./tests/regression_suite.sh`, and updating release/testing docs/checklists for matrix evidence verification.
 - 2026-03-06: Completed `M-010` and `M-009` security hardening pass with host-aliased SSH commands now escaped as shell-safe single-quoted arguments and command safety checks in `Shuttle/AppServices.swift`.
@@ -77,6 +81,8 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Added `M-013` after a security/stability review identified silent failure paths in terminal script execution.
+- 2026-03-06: Added `M-014` to enforce security regression coverage for runtime fallback and automation policy surfaces before concluding migration hardening.
 - 2026-03-06: Completed `M-008` to keep documentation/changelog aligned with production behavior and avoid stale operational instructions.
 - 2026-03-06: Marked `M-011` complete after source-level security check automation was added to regression suite.
 - 2026-03-06: Added `M-009` with a security posture that prioritizes shell-argument safety and deterministic command validation over compatibility shortcuts.
@@ -96,5 +102,5 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-26: AppleScript compile tooling is root-relative (`./apple-scripts/compile-all.sh`) to avoid workstation-specific path coupling.
 
 ## Next Review Checkpoint
-- Date: 2026-03-20
+- Date: 2026-03-22
 - Focus: Complete `M-011`, verify regression suite with security gate, and confirm stability for final migration closure.

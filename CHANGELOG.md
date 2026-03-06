@@ -140,7 +140,7 @@ Should open the above path in finder.
 ```"title": "Dev Server - SSH"```
 - Add a Theme to your window: In your JSON for the command add this directive:
 ```"theme": "Homebrew",```
-- Change the Path to the JSON file. In your home directory create a file called ```~/.shuttle.path``` In this file is the path to the JSON settings. Mine currently reads ```/Users/thshdw/Desktop/shuttle.json```
+- Change the Path to the JSON file. In your home directory create a file called ```~/.shuttle.path```. In this file, set the path to your JSON settings file (for example: ```/path/to/shuttle.json```).
 - Change the default editor. In the JSON settings change ```“editor”: “default”``` will open the settings file from the Settings > edit menu in that editor. Set the editor to 'nano', 'vi', or any terminal based editor.
 - Shuttle About Opens a GUI window that shows the version with a button to the home page.
 

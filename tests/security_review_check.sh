@@ -38,6 +38,11 @@ forbidden_pattern "No unquoted SSH host command interpolation" "itemList.add([\"
 check_pattern "Open-mode resolution normalizes commandWindow and checks allow-list" "allowedOpenModes.contains(normalizedCommandWindow)" "$ROOT_DIR/Shuttle/AppServices.swift"
 check_pattern "Open-mode resolution rejects invalid inTerminal values" "bad \\\"inTerminal\\\":\\\"VALUE\\\" in the JSON settings" "$ROOT_DIR/Shuttle/AppServices.swift"
 check_pattern "Editor command path is shell-quoted" "SecurityPolicies.shellSingleQuote(shuttleConfigFile)" "$ROOT_DIR/Shuttle/AppDelegate.swift"
+check_pattern "Missing terminal scripts fail fast and surface error" "Unable to run Terminal.app script" "$ROOT_DIR/Shuttle/AppServices.swift"
+check_pattern "Ghostty direct launch validates command safety" "runGhosttyDirect" "$ROOT_DIR/Shuttle/AppServices.swift"
+check_pattern "runGhosttyDirect blocks unsafe commands" "isSafeCommand(command)" "$ROOT_DIR/Shuttle/AppServices.swift"
+check_pattern "About window fallback open command uses background open argument" "task.arguments = [\"-g\", url.absoluteString]" "$ROOT_DIR/Shuttle/AboutWindowController.swift"
+check_pattern "runScript now returns explicit success/failure" "private func runScript(scriptPath" "$ROOT_DIR/Shuttle/AppServices.swift"
 
 if [[ "$fail" -ne 0 ]]; then
     echo "Result: FAIL"

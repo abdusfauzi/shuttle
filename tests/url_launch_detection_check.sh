@@ -10,8 +10,18 @@ if /usr/bin/grep -q "return URL(string: command)" "$SOURCE_FILE"; then
     exit 1
 fi
 
-if ! /usr/bin/grep -q "contains(\"://\")" "$SOURCE_FILE"; then
-    echo "FAIL: strict URL-scheme detection guard not found." >&2
+if ! /usr/bin/grep -q "URLComponents(string: command)" "$SOURCE_FILE"; then
+    echo "FAIL: URLComponents-based URL launch detector not found." >&2
+    exit 1
+fi
+
+if ! /usr/bin/grep -q "components\\.scheme" "$SOURCE_FILE"; then
+    echo "FAIL: URL scheme guard not found." >&2
+    exit 1
+fi
+
+if ! /usr/bin/grep -q "allowedBrowserSchemes.contains(scheme)" "$SOURCE_FILE"; then
+    echo "FAIL: URL scheme allow-list guard not found." >&2
     exit 1
 fi
 

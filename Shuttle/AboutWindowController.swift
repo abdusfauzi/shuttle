@@ -92,7 +92,7 @@ class AboutWindowController: NSWindowController {
         do {
             let task = Process()
             task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            task.arguments = [url.absoluteString]
+            task.arguments = ["-g", url.absoluteString]
             try task.run()
         } catch {
             NSLog("Failed to open URL %@: %@", url.absoluteString, error.localizedDescription)

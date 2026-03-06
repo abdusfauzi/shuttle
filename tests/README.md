@@ -2,6 +2,9 @@
 
 - `path_hygiene_check.sh`: ensures docs/scripts do not contain hardcoded workstation paths.
 - `security_review_check.sh`: verifies key security controls remain in place (command safety, SSH quoting, mode sanitization, editor quoting patterns).
+- `url_launch_detection_check.sh`: verifies URL launch detection uses explicit scheme checks instead of raw URL initialization.
+- `launch_at_login_crash_guard.sh`: validates legacy launch-at-login code does not call unsafe LSSharedFileList pointer conversion.
+- `ghostty_launch_policy_check.sh`: verifies Ghostty uses UI-controlled fallback and direct launch policy expectations.
 - `terminal_parity_resource_check.sh`: verifies required compiled `.scpt` resources and terminal-routing markers.
 - `terminal_parity_probe.sh`: verifies preflight and installed terminal app presence/version.
 - `terminal_parity_smoke.sh`: runs preflight + AppleScript handler dispatch + GUI capability checks.
