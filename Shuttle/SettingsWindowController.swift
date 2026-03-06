@@ -21,6 +21,8 @@ struct SettingsWindowState {
     let configReadable: Bool
     let accessibilityGranted: Bool
     let automationGranted: Bool
+    let requiresAccessibility: Bool
+    let requiresAutomation: Bool
     let showSSHConfigHosts: Bool
     let configFileStatus: String
     let version: String
@@ -277,8 +279,16 @@ final class SettingsWindowController: NSWindowController {
     }
 
     private func refreshInterface(with state: SettingsWindowState) {
-        accessibilityStatusLabel.stringValue = state.accessibilityGranted ? NSLocalizedString("Granted", comment: "") : NSLocalizedString("Required", comment: "")
-        automationStatusLabel.stringValue = state.automationGranted ? NSLocalizedString("Granted", comment: "") : NSLocalizedString("Required", comment: "")
+        accessibilityStatusLabel.stringValue = permissionStatusText(
+            granted: state.accessibilityGranted,
+            required: state.requiresAccessibility,
+            fallback: NSLocalizedString("Not required", comment: "")
+        )
+        automationStatusLabel.stringValue = permissionStatusText(
+            granted: state.automationGranted,
+            required: state.requiresAutomation,
+            fallback: NSLocalizedString("On-demand", comment: "")
+        )
         configStatusLabel.stringValue = state.configFileStatus
         configPathLabel.stringValue = state.configPath
         configSourceLabel.stringValue = state.configSource
@@ -292,10 +302,10 @@ final class SettingsWindowController: NSWindowController {
 
     private func summaryText(for state: SettingsWindowState) -> String {
         var missing: [String] = []
-        if !state.accessibilityGranted {
+        if state.requiresAccessibility && !state.accessibilityGranted {
             missing.append(NSLocalizedString("Accessibility permission is required.", comment: ""))
         }
-        if !state.automationGranted {
+        if state.requiresAutomation && !state.automationGranted {
             missing.append(NSLocalizedString("Automation permission is required (System Events).", comment: ""))
         }
         if !state.configReadable {
@@ -307,6 +317,16 @@ final class SettingsWindowController: NSWindowController {
         }
 
         return missing.joined(separator: " ")
+    }
+
+    private func permissionStatusText(granted: Bool, required: Bool, fallback: String) -> String {
+        if granted {
+            return NSLocalizedString("Granted", comment: "")
+        }
+        if required {
+            return NSLocalizedString("Required", comment: "")
+        }
+        return fallback
     }
 
     private static func makeHeadlineLabel(_ text: String) -> NSTextField {

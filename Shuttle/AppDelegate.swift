@@ -150,7 +150,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @IBAction func openHost(_ sender: NSMenuItem) {
-        let status = onboardingPreflight.evaluate(configPath: shuttleConfigFile)
+        let activeConfigPath = syncActiveConfigLocation().path
+        let status = evaluatePreflight(configPath: activeConfigPath)
         if !status.isReady {
             showSettings(nil)
             return
@@ -268,7 +269,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showPreflightOnboardingIfNeeded() {
-        let status = onboardingPreflight.evaluate(configPath: syncActiveConfigLocation().path)
+        let status = evaluatePreflight(configPath: syncActiveConfigLocation().path)
         guard !status.isReady else {
             return
         }
@@ -431,8 +432,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func currentSettingsState() -> SettingsWindowState {
         let location = syncActiveConfigLocation()
-        let status = onboardingPreflight.evaluate(configPath: location.path)
         let snapshot = configService.loadConfigSnapshot(from: location.path)
+        let status = evaluatePreflight(
+            configPath: location.path,
+            snapshotTerminalPref: snapshot?.terminalPref,
+            snapshotOpenInPref: snapshot?.openInPref
+        )
         let infoDictionary = Bundle.main.infoDictionary ?? [:]
         let bundleVersion = (infoDictionary["CFBundleShortVersionString"] as? String)
             ?? (infoDictionary["CFBundleVersion"] as? String)
@@ -444,6 +449,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             configReadable: status.configReadable,
             accessibilityGranted: status.accessibilityGranted,
             automationGranted: status.automationGranted,
+            requiresAccessibility: status.requiresAccessibility,
+            requiresAutomation: status.requiresAutomation,
             showSSHConfigHosts: snapshot?.showSSHConfigHosts ?? false,
             configFileStatus: status.configReadable
                 ? NSLocalizedString("Readable", comment: "")
@@ -457,6 +464,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             copyright: (infoDictionary["NSHumanReadableCopyright"] as? String) ?? "",
             originalHomepage: infoDictionary["Product Homepage"] as? String,
             forkHomepage: infoDictionary["Fork Homepage"] as? String
+        )
+    }
+
+    private func evaluatePreflight(
+        configPath: String,
+        snapshotTerminalPref: String? = nil,
+        snapshotOpenInPref: String? = nil
+    ) -> PreflightStatus {
+        let resolvedSnapshot = (snapshotTerminalPref == nil || snapshotOpenInPref == nil)
+            ? configService.loadConfigSnapshot(from: configPath)
+            : nil
+        let resolvedTerminalPref = snapshotTerminalPref
+            ?? resolvedSnapshot?.terminalPref
+            ?? terminalPref
+        let resolvedOpenInPref = snapshotOpenInPref
+            ?? resolvedSnapshot?.openInPref
+            ?? openInPref
+
+        return onboardingPreflight.evaluate(
+            configPath: configPath,
+            terminalPref: resolvedTerminalPref,
+            openInPref: resolvedOpenInPref
         )
     }
 
