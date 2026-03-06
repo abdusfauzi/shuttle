@@ -41,6 +41,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-014 | Extend security regression coverage for launch policy and fallback paths | Security | done | P1 | unassigned | 2026-03-06 | M-013 | 2026-03-06 | Added regression coverage for URL-launch detection, launch-at-login pointer-safety, and Ghostty launch-policy fallback checks to the security step in `regression_suite.sh`. |
 | M-015 | Remove `.scpt` dependency from runtime/parity tooling and align checks on embedded templates | Testing/Hardening | done | P0 | unassigned | 2026-03-06 | M-013, M-014 | 2026-03-06 | Updated `Shuttle.xcodeproj` to remove packaged `.scpt` references, switched parity resource checks to inspect embedded `TerminalScriptCatalog` templates, and updated `terminal_parity_smoke.sh`/`terminal_parity_matrix_capture.sh` to execute against Swift-hosted script sources.
 | M-016 | Stabilize parity check execution under non-interactive AppleScript constraints | Testing/Hardening | done | P1 | unassigned | 2026-03-06 | M-015 | 2026-03-06 | Added bounded execution wrappers for embedded-template checks, made matrix cell execution continue under `set -e`, and normalized captured report paths to avoid workstation-absolute strings.
+| M-017 | Publish migration progress dashboard and timeline tracking | Documentation/Operations | done | P2 | unassigned | 2026-03-20 | M-016 | 2026-03-06 | Added `docs/plans/migration-progress-dashboard.md`, linked it in planning docs, and documented the current completion state and remaining balance focus areas.
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
@@ -50,6 +51,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - Embedded template parity checks remain permission-sensitive but no longer hang in constrained environments; failures are reported as blocked/fail with deterministic outcomes.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-017` by publishing `docs/plans/migration-progress-dashboard.md` and linking it into planning indexes for timeline-aware status reporting.
 - 2026-03-06: Completed `M-016` by adding timeout-based script execution wrappers, non-fatal matrix progress, and absolute-path-safe report rendering in parity validation flows.
 - 2026-03-06: Completed `M-015` by removing packaged `.scpt` references from the app target and migrating parity preflight/smoke/matrix scripts to use `TerminalScriptCatalog` templates in `Shuttle/AppServices.swift`.
 - 2026-03-06: Completed `M-014` by adding URL launch detection/launch-at-login/Ghostty policy checks to the security gate and documenting them in test readme/docs.
@@ -86,6 +88,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Added `M-017` to provide a dedicated migration completion dashboard so stakeholders can answer progress questions with explicit percentages and checkpoints.
 - 2026-03-06: Added `M-016` to harden parity verification against non-interactive/permission-limited environments by bounding execution and preserving deterministic failure reporting.
 - 2026-03-06: Added `M-013` after a security/stability review identified silent failure paths in terminal script execution.
 - 2026-03-06: Added `M-014` to enforce security regression coverage for runtime fallback and automation policy surfaces before concluding migration hardening.

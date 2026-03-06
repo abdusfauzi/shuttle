@@ -66,7 +66,7 @@ final class LaunchAtLoginController: NSObject {
 
         let appItem = findItem(with: itemURL, in: loginItems)
         if enabled, appItem == nil {
-            let insertPosition = unsafeBitCast(kLSSharedFileListItemBeforeFirst.toOpaque(), to: LSSharedFileListItem.self)
+            let insertPosition = kLSSharedFileListItemBeforeFirst.takeUnretainedValue()
             LSSharedFileListInsertItemURL(
                 loginItems,
                 insertPosition,
