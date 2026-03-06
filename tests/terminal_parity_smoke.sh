@@ -5,6 +5,71 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_SERVICES="$ROOT_DIR/Shuttle/AppServices.swift"
 DATE_UTC="$(date -u +%F)"
 APPLE_SCRIPT_TIMEOUT_SECONDS="${TERMINAL_PARITY_APPLESCRIPT_TIMEOUT_SECONDS:-8}"
+TERMINAL_SMOKE_WINDOW_TITLE="Shuttle Smoke $(date -u +%H%M%S)-$$"
+
+cleanup_terminal_smoke_artifacts() {
+  local cleanup_script
+
+  if [[ -z "${TERMINAL_SMOKE_WINDOW_TITLE:-}" ]] || ! command -v osascript >/dev/null 2>&1; then
+    return 0
+  fi
+
+  cleanup_script="$(mktemp)"
+  {
+cat <<EOF
+on run argv
+  set marker to item 1 of argv
+
+  tell application "Terminal"
+    if it is running then
+      repeat with wi from (count windows) to 1 by -1
+        set targetWindow to window wi
+        repeat with ti from (count tabs of targetWindow) to 1 by -1
+          try
+            if (custom title of tab ti of targetWindow) is marker then
+              close tab ti of targetWindow
+            end if
+          end try
+        end repeat
+        try
+          if (count tabs of targetWindow) is 0 then
+            close targetWindow
+          end if
+        end try
+      end repeat
+    end if
+  end tell
+
+  tell application "iTerm"
+    if it is running then
+      repeat with wi from (count windows) to 1 by -1
+        set targetWindow to window wi
+        repeat with si from (count sessions of targetWindow) to 1 by -1
+          try
+            if (name of session si of targetWindow) is marker then
+              close session si of targetWindow
+            end if
+          end try
+        end repeat
+        try
+          if (count sessions of targetWindow) is 0 then
+            close targetWindow
+          end if
+        end try
+      end repeat
+    end if
+  end tell
+end run
+EOF
+} > "$cleanup_script"
+
+  set +e
+  osascript "$cleanup_script" "$TERMINAL_SMOKE_WINDOW_TITLE" >/dev/null 2>&1 || true
+  rm -f "$cleanup_script"
+  set -e
+}
+
+trap cleanup_terminal_smoke_artifacts EXIT
 
 extract_script_source() {
   local symbol="$1"
@@ -144,15 +209,15 @@ fi
 
 echo "3) AppleScript handler invocation checks (syntax/dispatch only)"
 set +e
-run_template_script "terminal:new" "terminalNewWindow" "echo shuttle-smoke" "basic" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
-run_template_script "terminal:tab" "terminalNewTabDefault" "echo shuttle-smoke" "basic" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
+run_template_script "terminal:new" "terminalNewWindow" "echo shuttle-smoke" "basic" "$TERMINAL_SMOKE_WINDOW_TITLE" || invocation_blocked=$((invocation_blocked + 1))
+run_template_script "terminal:tab" "terminalNewTabDefault" "echo shuttle-smoke" "basic" "$TERMINAL_SMOKE_WINDOW_TITLE" || invocation_blocked=$((invocation_blocked + 1))
 run_template_script "terminal:current" "terminalCurrentWindow" "echo shuttle-smoke" || invocation_blocked=$((invocation_blocked + 1))
 run_template_script "virtual:screen" "virtualWithScreen" "echo shuttle-smoke" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
-run_template_script "iterm-stable:new" "iTermNewWindow" "echo shuttle-smoke" "Default" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
-run_template_script "iterm-stable:tab" "iTermNewTabDefault" "echo shuttle-smoke" "Default" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
+run_template_script "iterm-stable:new" "iTermNewWindow" "echo shuttle-smoke" "Default" "$TERMINAL_SMOKE_WINDOW_TITLE" || invocation_blocked=$((invocation_blocked + 1))
+run_template_script "iterm-stable:tab" "iTermNewTabDefault" "echo shuttle-smoke" "Default" "$TERMINAL_SMOKE_WINDOW_TITLE" || invocation_blocked=$((invocation_blocked + 1))
 run_template_script "iterm-stable:current" "iTermCurrentWindow" "echo shuttle-smoke" || invocation_blocked=$((invocation_blocked + 1))
-run_template_script "iterm-nightly:new" "iTermNewWindow" "echo shuttle-smoke" "Default" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
-run_template_script "iterm-nightly:tab" "iTermNewTabDefault" "echo shuttle-smoke" "Default" "Shuttle Smoke" || invocation_blocked=$((invocation_blocked + 1))
+run_template_script "iterm-nightly:new" "iTermNewWindow" "echo shuttle-smoke" "Default" "$TERMINAL_SMOKE_WINDOW_TITLE" || invocation_blocked=$((invocation_blocked + 1))
+run_template_script "iterm-nightly:tab" "iTermNewTabDefault" "echo shuttle-smoke" "Default" "$TERMINAL_SMOKE_WINDOW_TITLE" || invocation_blocked=$((invocation_blocked + 1))
 run_template_script "iterm-nightly:current" "iTermCurrentWindow" "echo shuttle-smoke" || invocation_blocked=$((invocation_blocked + 1))
 set -e
 echo
