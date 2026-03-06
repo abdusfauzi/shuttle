@@ -12,10 +12,12 @@
 - `terminal_parity_resource_check.sh`: verifies runtime script templates and terminal-routing markers in `Shuttle/AppServices.swift`.
 - `terminal_parity_probe.sh`: verifies preflight and installed terminal app presence/version.
 - `terminal_parity_smoke.sh`: runs preflight + AppleScript handler dispatch + GUI capability checks.
+- Default mode is non-invasive and compile-only; set `TERMINAL_PARITY_INTERACTIVE_SMOKE=1` to run real interactive launches.
 - `terminal_parity_matrix_check.sh`: verifies the latest captured matrix report exists and is marked `PASS` with full cell count.
 - `regression_suite.sh`: one-shot regression runner for path hygiene + parity scripts + matrix evidence + `xcodebuild`.
   - Use `./tests/regression_suite.sh --with-compile` to include `./apple-scripts/compile-all.sh` at the start.
 - `terminal_parity_matrix_capture.sh`: runs the full parity cell matrix (using embedded Swift-hosted script templates for Terminal/iTerm/virtual paths) and writes `tests/terminal-parity-matrix-capture-<timestamp>.md` with per-cell pass/fail evidence.
+- Default matrix capture is non-invasive and compile-only; set `TERMINAL_PARITY_INTERACTIVE_MATRIX=1` to run real terminal launches.
 - `compile_all_policy_check.sh`: validates that `compile-all.sh` excludes archived legacy scripts from active flow.
 
 Archived legacy script checks and sources are retained under:

@@ -6,6 +6,7 @@ APP_SERVICES="$ROOT_DIR/Shuttle/AppServices.swift"
 DATE_UTC="$(date -u +%F_%H-%M-%SZ)"
 REPORT_FILE="$ROOT_DIR/tests/terminal-parity-matrix-capture-${DATE_UTC}.md"
 APPLE_SCRIPT_TIMEOUT_SECONDS="${TERMINAL_PARITY_APPLESCRIPT_TIMEOUT_SECONDS:-8}"
+INTERACTIVE_MATRIX="${TERMINAL_PARITY_INTERACTIVE_MATRIX:-0}"
 MATRIX_SMOKE_WINDOW_TITLE="Shuttle Matrix $(date -u +%H%M%S)-$$"
 
 cleanup_matrix_terminal_artifacts() {
@@ -136,6 +137,119 @@ PY
     set -e
 
     printf '%s' "$raw_output"
+    return $rc
+}
+
+compile_applescript_file() {
+    local terminal_label="$1"
+    local open_mode="$2"
+    local file_path="$3"
+
+    if ! command -v osacompile >/dev/null 2>&1; then
+        append_row "| $terminal_label | $open_mode | fail | rc=127 | osacompile is unavailable in this environment |"
+        failed_cells=$((failed_cells + 1))
+        total_cells=$((total_cells + 1))
+        return 127
+    fi
+
+    local compiled_output
+    compiled_output="$(mktemp "${TMPDIR:-/tmp}/shuttle-matrix-XXXXXX.scpt")"
+    rm -f "$compiled_output"
+
+    set +e
+    local output
+    output="$(osacompile -o "$compiled_output" "$file_path" 2>&1)"
+    local rc=$?
+    set -e
+
+    rm -f "$compiled_output"
+
+    output="${output//$'\n'/; }"
+    if [[ -n "$output" ]]; then
+        output="${output:0:220}"
+    fi
+
+    if [[ $rc -eq 0 ]]; then
+        append_row "| $terminal_label | $open_mode | pass | rc=$rc | $output |"
+        passed_cells=$((passed_cells + 1))
+    else
+        append_row "| $terminal_label | $open_mode | fail | rc=$rc | $output |"
+        failed_cells=$((failed_cells + 1))
+    fi
+
+    total_cells=$((total_cells + 1))
+    return $rc
+}
+
+compile_embedded_script() {
+    local terminal_label="$1"
+    local open_mode="$2"
+    local symbol="$3"
+
+    local template
+    template="$(extract_script_source "$symbol")"
+    if [[ -z "$template" ]]; then
+        append_row "| $terminal_label | $open_mode | fail | rc=1 | missing template '$symbol' |"
+        failed_cells=$((failed_cells + 1))
+        total_cells=$((total_cells + 1))
+        return 1
+    fi
+
+    local tmp_script
+    tmp_script="$(mktemp)"
+    {
+        printf '%s\n' "$template"
+        cat <<'EOF'
+on run argv
+  return "compiled"
+end run
+EOF
+    } > "$tmp_script"
+
+    compile_applescript_file "$terminal_label" "$open_mode" "$tmp_script"
+    local rc=$?
+    rm -f "$tmp_script"
+    return $rc
+}
+
+compile_ui_controlled_script() {
+    local terminal_label="$1"
+    local open_mode="$2"
+    local tmp_ui_script
+
+    tmp_ui_script="$(mktemp)"
+    cat > "$tmp_ui_script" <<'EOF'
+on run argv
+    set terminalName to item 1 of argv
+    set terminalCommand to item 2 of argv
+    set terminalWindow to item 3 of argv
+
+    set wasRunning to application terminalName is running
+    tell application terminalName to activate
+    delay 0.2
+
+    tell application "System Events"
+        tell process terminalName
+            if terminalWindow is "new" then
+                keystroke "n" using {command down}
+                delay 0.1
+            else if terminalWindow is "tab" then
+                if wasRunning then
+                    keystroke "t" using {command down}
+                    delay 0.1
+                end if
+            end if
+
+            keystroke terminalCommand
+            key code 36
+        end tell
+    end tell
+end run
+EOF
+
+    compile_applescript_file "$terminal_label" "$open_mode" "$tmp_ui_script"
+    local rc=$?
+    rm -f "$tmp_ui_script"
     return $rc
 }
 
@@ -272,6 +386,7 @@ EOF
 echo "# Terminal Parity Matrix Capture" > "$REPORT_FILE"
 echo "Date (UTC): $DATE_UTC" >> "$REPORT_FILE"
 echo "Host macOS: $(sw_vers -productVersion)" >> "$REPORT_FILE"
+echo "Interactive mode: $INTERACTIVE_MATRIX" >> "$REPORT_FILE"
 echo >> "$REPORT_FILE"
 
 echo "1) Preflight checks" | tee -a "$REPORT_FILE"
@@ -296,30 +411,57 @@ echo "| Terminal | mode | status | result | notes |" >> "$REPORT_FILE"
 echo "|---|---|---|---|---|" >> "$REPORT_FILE"
 
 set +e
-run_embedded_script "Terminal.app" "new" "terminalNewWindow" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "Terminal.app" "tab" "terminalNewTabDefault" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "Terminal.app" "current" "terminalCurrentWindow" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "Terminal.app" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
+if [[ "$INTERACTIVE_MATRIX" == "1" ]]; then
+    run_embedded_script "Terminal.app" "new" "terminalNewWindow" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "Terminal.app" "tab" "terminalNewTabDefault" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "Terminal.app" "current" "terminalCurrentWindow" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "Terminal.app" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_embedded_script "iTerm (stable)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "iTerm (stable)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "iTerm (stable)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "iTerm (stable)" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
+    run_embedded_script "iTerm (stable)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "iTerm (stable)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "iTerm (stable)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "iTerm (stable)" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_embedded_script "iTerm (nightly)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "iTerm (nightly)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "iTerm (nightly)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
-run_embedded_script "iTerm (nightly)" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
+    run_embedded_script "iTerm (nightly)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "iTerm (nightly)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "iTerm (nightly)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+    run_embedded_script "iTerm (nightly)" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_ui_controlled_terminal "Warp" "Warp" "new" "shuttle-matrix; exit"
-run_ui_controlled_terminal "Warp" "Warp" "tab" "shuttle-matrix; exit"
-run_ui_controlled_terminal "Warp" "Warp" "current" "shuttle-matrix"
-run_embedded_script "Warp" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
+    run_ui_controlled_terminal "Warp" "Warp" "new" "shuttle-matrix; exit"
+    run_ui_controlled_terminal "Warp" "Warp" "tab" "shuttle-matrix; exit"
+    run_ui_controlled_terminal "Warp" "Warp" "current" "shuttle-matrix"
+    run_embedded_script "Warp" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_ui_controlled_terminal "Ghostty" "Ghostty" "new" "shuttle-matrix; exit"
-run_ui_controlled_terminal "Ghostty" "Ghostty" "tab" "shuttle-matrix; exit"
-run_ui_controlled_terminal "Ghostty" "Ghostty" "current" "shuttle-matrix"
-run_embedded_script "Ghostty" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
+    run_ui_controlled_terminal "Ghostty" "Ghostty" "new" "shuttle-matrix; exit"
+    run_ui_controlled_terminal "Ghostty" "Ghostty" "tab" "shuttle-matrix; exit"
+    run_ui_controlled_terminal "Ghostty" "Ghostty" "current" "shuttle-matrix"
+    run_embedded_script "Ghostty" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
+else
+    compile_embedded_script "Terminal.app" "new" "terminalNewWindow"
+    compile_embedded_script "Terminal.app" "tab" "terminalNewTabDefault"
+    compile_embedded_script "Terminal.app" "current" "terminalCurrentWindow"
+    compile_embedded_script "Terminal.app" "virtual" "virtualWithScreen"
+
+    compile_embedded_script "iTerm (stable)" "new" "iTermNewWindow"
+    compile_embedded_script "iTerm (stable)" "tab" "iTermNewTabDefault"
+    compile_embedded_script "iTerm (stable)" "current" "iTermCurrentWindow"
+    compile_embedded_script "iTerm (stable)" "virtual" "virtualWithScreen"
+
+    compile_embedded_script "iTerm (nightly)" "new" "iTermNewWindow"
+    compile_embedded_script "iTerm (nightly)" "tab" "iTermNewTabDefault"
+    compile_embedded_script "iTerm (nightly)" "current" "iTermCurrentWindow"
+    compile_embedded_script "iTerm (nightly)" "virtual" "virtualWithScreen"
+
+    compile_ui_controlled_script "Warp" "new"
+    compile_ui_controlled_script "Warp" "tab"
+    compile_ui_controlled_script "Warp" "current"
+    compile_embedded_script "Warp" "virtual" "virtualWithScreen"
+
+    compile_ui_controlled_script "Ghostty" "new"
+    compile_ui_controlled_script "Ghostty" "tab"
+    compile_ui_controlled_script "Ghostty" "current"
+    compile_embedded_script "Ghostty" "virtual" "virtualWithScreen"
+fi
 set -e
 
 echo >> "$REPORT_FILE"
