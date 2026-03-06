@@ -34,8 +34,8 @@ if ! /usr/bin/grep -q '"-n", "-a", "Ghostty"' "$SOURCE_FILE"; then
     exit 1
 fi
 
-if ! /usr/bin/grep -q '"--args", "-e", "/bin/zsh", "-lc", command' "$SOURCE_FILE"; then
-    echo "FAIL: Ghostty direct launch does not use safe shell argument form." >&2
+if ! /usr/bin/grep -F -q 'let ghosttyCommandArgument = "--command=shell:\(command)"' "$SOURCE_FILE"; then
+    echo "FAIL: Ghostty direct launch does not use Ghostty shell-command mode." >&2
     exit 1
 fi
 
