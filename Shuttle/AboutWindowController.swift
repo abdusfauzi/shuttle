@@ -33,12 +33,10 @@ class AboutWindowController: NSWindowController {
         )
         appName.stringValue = programName
 
-        let migrationNote = NSLocalizedString(" (Swift core refactor; SwiftUI migration groundwork)", comment: "")
         let programVersion = String(
-            format: "%@%@%@",
+            format: "%@%@",
             NSLocalizedString("Version: ", comment: ""),
-            applicationVersion,
-            migrationNote
+            applicationVersion
         )
         appVersion.cell?.wraps = true
         appVersion.cell?.usesSingleLineMode = false

@@ -8,7 +8,6 @@
 "Version: " = "Version: ";
 " - A simple SSH shortcut menu." = " - Le gestionnaire de raccourcis SSH.";
 "Error parsing config" = "Fichier de paramétrage invalide";
-" (Swift core refactor; SwiftUI migration groundwork)" = " (refonte du coeur en Swift ; base de migration vers SwiftUI)";
 "Shuttle setup required" = "Configuration Shuttle requise";
 "Open Privacy Settings" = "Ouvrir les reglages de confidentialite";
 "Open Config" = "Ouvrir la configuration";
