@@ -11,9 +11,11 @@
 - Clean release build footprint check passes (`xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Release -sdk macosx -derivedDataPath /tmp/ShuttleSignedBuild build` then `./tests/release_bundle_size_check.sh`).
 - For macOS `10.13`, embedded `libswift*.dylib` files in `Contents/Frameworks` are expected; the footprint check guards for unexpected non-Swift frameworks and bundle-size regression instead of requiring zero frameworks.
 - First-run onboarding preflight validates required setup:
-  - Missing permissions/config show the setup card before shortcut execution.
-  - `Open Privacy Settings` opens Security/Privacy panes.
-  - `Open Config` opens the active Shuttle config file.
+  - Missing permissions/config auto-open the centered Settings window before shortcut execution.
+  - `Open Accessibility` opens the Accessibility privacy pane.
+  - `Open Automation` opens the Automation privacy pane.
+  - `Choose Config File` can point Shuttle at a local or iCloud Drive `.json` file.
+  - `Copy Local Default To...` and `Copy Active To Local Default` allow explicit local/iCloud mirror copies without changing the active file unexpectedly.
   - After granting requirements, SSH shortcuts run without onboarding block.
 - Migration phase acceptance criteria met.
 

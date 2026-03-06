@@ -26,7 +26,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var ignoreKeywords: [String] = []
 
     private var launchAtLoginController: LaunchAtLoginController!
-    private var aboutWindowController: AboutWindowController?
+    private var settingsWindowController: SettingsWindowController?
+    private var staticMenuItemCount = 4
 
     private let configService = ConfigService()
     private let sshConfigParser = SSHConfigParser()
@@ -59,7 +60,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     override func awakeFromNib() {
-        shuttleConfigFile = configService.resolveShuttleConfigFile()
+        shuttleConfigFile = configService.resolveConfigLocation().path
 
         regularIcon = NSImage(named: "StatusIcon")
         altIcon = NSImage(named: "StatusIconAlt")
@@ -77,6 +78,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         launchAtLoginController = LaunchAtLoginController()
+        configureStaticMenuItems()
         menu.delegate = self
 
         DispatchQueue.main.async { [weak self] in
@@ -96,7 +98,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func loadMenu() {
-        menuBuilder.clearDynamicItems(in: menu)
+        menuBuilder.clearDynamicItems(in: menu, preservingLast: staticMenuItemCount)
 
         guard let snapshot = configService.loadConfigSnapshot(from: shuttleConfigFile) else {
             let menuItem = menu.insertItem(
@@ -150,7 +152,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @IBAction func openHost(_ sender: NSMenuItem) {
         let status = onboardingPreflight.evaluate(configPath: shuttleConfigFile)
         if !status.isReady {
-            showPreflightOnboardingIfNeeded()
+            showSettings(nil)
             return
         }
 
@@ -166,12 +168,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @IBAction func showImportPanel(_ sender: Any?) {
+        shuttleConfigFile = syncActiveConfigLocation().path
         let openPanelObj = NSOpenPanel()
         let result = openPanelObj.runModal()
         if result == .OK, let selectedFileURL = openPanelObj.url {
             do {
-                try replaceConfig(with: selectedFileURL.path)
+                try replaceConfig(at: shuttleConfigFile, with: selectedFileURL.path)
                 loadMenu()
+                refreshSettingsWindow()
             } catch {
                 showNonFatalError(
                     title: NSLocalizedString("Import failed", comment: ""),
@@ -182,11 +186,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @IBAction func showExportPanel(_ sender: Any?) {
+        shuttleConfigFile = syncActiveConfigLocation().path
         let savePanelObj = NSSavePanel()
         let result = savePanelObj.runModal()
         if result == .OK, let saveURL = savePanelObj.url {
             do {
                 try FileManager.default.copyItem(atPath: shuttleConfigFile, toPath: saveURL.path)
+                refreshSettingsWindow()
             } catch {
                 showNonFatalError(
                     title: NSLocalizedString("Export failed", comment: ""),
@@ -197,6 +203,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @IBAction func configure(_ sender: Any?) {
+        shuttleConfigFile = syncActiveConfigLocation().path
         if editorPref.range(of: "default") != nil {
             NSWorkspace.shared.open(URL(fileURLWithPath: shuttleConfigFile))
         } else {
@@ -221,13 +228,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             editorMenu.representedObject = editorRepObj
             openHost(editorMenu)
         }
+
+        refreshSettingsWindow()
+    }
+
+    @IBAction func showSettings(_ sender: Any?) {
+        let controller = activeSettingsWindowController()
+        refreshSettingsWindow()
+        controller.showWindow(self)
     }
 
     @IBAction func showAbout(_ sender: Any?) {
-        aboutWindowController = AboutWindowController(windowNibName: "AboutWindowController")
-        aboutWindowController?.showWindow(self)
-        aboutWindowController?.window?.makeKeyAndOrderFront(nil)
-        aboutWindowController?.window?.level = .floating
+        showSettings(sender)
     }
 
     @IBAction func quit(_ sender: Any?) {
@@ -256,59 +268,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showPreflightOnboardingIfNeeded() {
-        let status = onboardingPreflight.evaluate(configPath: shuttleConfigFile)
+        let status = onboardingPreflight.evaluate(configPath: syncActiveConfigLocation().path)
         guard !status.isReady else {
             return
         }
 
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = NSLocalizedString("Shuttle setup required", comment: "")
-        alert.informativeText = preflightMessage(status)
-        alert.addButton(withTitle: NSLocalizedString("Open Privacy Settings", comment: ""))
-        alert.addButton(withTitle: NSLocalizedString("Open Config", comment: ""))
-        alert.addButton(withTitle: NSLocalizedString("Continue", comment: ""))
-
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            openPrivacySettings()
-        case .alertSecondButtonReturn:
-            configure(nil)
-        default:
-            break
-        }
+        showSettings(nil)
     }
 
-    private func preflightMessage(_ status: PreflightStatus) -> String {
-        var lines: [String] = []
-
-        if !status.accessibilityGranted {
-            lines.append(NSLocalizedString("Accessibility permission is required.", comment: ""))
-        }
-        if !status.automationGranted {
-            lines.append(NSLocalizedString("Automation permission is required (System Events).", comment: ""))
-        }
-        if !status.configReadable {
-            lines.append(NSLocalizedString("Config file is not readable.", comment: ""))
-        }
-
-        lines.append(NSLocalizedString("Grant permissions and try again.", comment: ""))
-        return lines.joined(separator: "\n")
-    }
-
-    private func openPrivacySettings() {
-        let urls = [
-            "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+    private func openAccessibilitySettings() {
+        openSystemSettings(urlStrings: [
             "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
             "x-apple.systempreferences:com.apple.preference.security?Privacy"
-        ]
+        ])
+    }
 
-        for urlString in urls {
-            guard let url = URL(string: urlString) else {
-                continue
-            }
+    private func openAutomationSettings() {
+        openSystemSettings(urlStrings: [
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy"
+        ])
+    }
 
-            guard SecurityPolicies.isAllowedURL(url, allowSystemSchemes: true) else {
+    private func openSystemSettings(urlStrings: [String]) {
+        for urlString in urlStrings {
+            guard let url = URL(string: urlString),
+                  SecurityPolicies.isAllowedURL(url, allowSystemSchemes: true) else {
                 continue
             }
 
@@ -319,6 +304,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func replaceConfig(with sourcePath: String) throws {
+        try replaceConfig(at: shuttleConfigFile, with: sourcePath)
+    }
+
+    private func replaceConfig(at destinationPath: String, with sourcePath: String) throws {
         let expandedSource = (sourcePath as NSString).expandingTildeInPath
         guard fileManager.isReadableFile(atPath: expandedSource) else {
             throw ConfigImportError.sourceNotReadable
@@ -328,7 +317,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             throw ConfigImportError.sourceValidationFailed
         }
 
-        guard let destinationPath = validatedWritableConfigPath(shuttleConfigFile) else {
+        guard let destinationPath = validatedWritableConfigPath(destinationPath) else {
             throw ConfigImportError.replaceFailed(NSError(domain: "Shuttle", code: 1))
         }
 
@@ -403,5 +392,215 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         alert.alertStyle = .critical
         alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
         _ = alert.runModal()
+    }
+
+    private func configureStaticMenuItems() {
+        if let settingsItem = menu.item(withTitle: "Settings") {
+            settingsItem.submenu = nil
+            settingsItem.action = #selector(showSettings(_:))
+            settingsItem.target = self
+            settingsItem.keyEquivalent = ""
+        }
+
+        if let aboutItem = menu.item(withTitle: "About") {
+            menu.removeItem(aboutItem)
+        }
+
+        staticMenuItemCount = menu.items.count
+    }
+
+    private func activeSettingsWindowController() -> SettingsWindowController {
+        if let settingsWindowController {
+            return settingsWindowController
+        }
+
+        let controller = SettingsWindowController(windowNibName: "SettingsWindowController")
+        controller.settingsDelegate = self
+        settingsWindowController = controller
+        return controller
+    }
+
+    private func syncActiveConfigLocation() -> ConfigLocationResolution {
+        let location = configService.resolveConfigLocation()
+        if location.path != shuttleConfigFile {
+            shuttleConfigFile = location.path
+            configModified = nil
+        }
+        return location
+    }
+
+    private func currentSettingsState() -> SettingsWindowState {
+        let location = syncActiveConfigLocation()
+        let status = onboardingPreflight.evaluate(configPath: location.path)
+        let snapshot = configService.loadConfigSnapshot(from: location.path)
+        let infoDictionary = Bundle.main.infoDictionary ?? [:]
+        let bundleVersion = (infoDictionary["CFBundleShortVersionString"] as? String)
+            ?? (infoDictionary["CFBundleVersion"] as? String)
+            ?? "Unknown"
+
+        return SettingsWindowState(
+            configPath: location.path,
+            configSource: location.source.displayName,
+            configReadable: status.configReadable,
+            accessibilityGranted: status.accessibilityGranted,
+            automationGranted: status.automationGranted,
+            showSSHConfigHosts: snapshot?.showSSHConfigHosts ?? false,
+            configFileStatus: status.configReadable
+                ? NSLocalizedString("Readable", comment: "")
+                : NSLocalizedString("Not readable", comment: ""),
+            version: bundleVersion,
+            maintainer: String(
+                format: "%@%@",
+                NSLocalizedString("Maintained by ", comment: ""),
+                NSLocalizedString("Abdus Fauzi", comment: "")
+            ),
+            copyright: (infoDictionary["NSHumanReadableCopyright"] as? String) ?? "",
+            originalHomepage: infoDictionary["Product Homepage"] as? String,
+            forkHomepage: infoDictionary["Fork Homepage"] as? String
+        )
+    }
+
+    private func refreshSettingsWindow() {
+        settingsWindowController?.update(with: currentSettingsState())
+    }
+
+    private func applyConfigLocation(_ location: ConfigLocationResolution, reloadMenu: Bool) {
+        shuttleConfigFile = location.path
+        configModified = nil
+        if reloadMenu {
+            loadMenu()
+            configModified = configService.modificationDate(file: shuttleConfigFile)
+        }
+        refreshSettingsWindow()
+    }
+
+    private func chooseConfigFile() {
+        let openPanel = NSOpenPanel()
+        openPanel.canChooseDirectories = false
+        openPanel.canChooseFiles = true
+        openPanel.allowsMultipleSelection = false
+        openPanel.allowedFileTypes = ["json"]
+        openPanel.prompt = NSLocalizedString("Choose Config File", comment: "")
+        openPanel.directoryURL = URL(fileURLWithPath: (shuttleConfigFile as NSString).deletingLastPathComponent)
+
+        guard openPanel.runModal() == .OK, let selectedFileURL = openPanel.url else {
+            return
+        }
+
+        guard configService.loadConfigSnapshot(from: selectedFileURL.path) != nil else {
+            showNonFatalError(
+                title: NSLocalizedString("Import failed", comment: ""),
+                info: NSLocalizedString("Config source is invalid JSON.", comment: "")
+            )
+            return
+        }
+
+        do {
+            let location = try configService.saveSelectedConfigFile(at: selectedFileURL)
+            applyConfigLocation(location, reloadMenu: true)
+        } catch {
+            showNonFatalError(
+                title: NSLocalizedString("Config selection failed", comment: ""),
+                info: error.localizedDescription
+            )
+        }
+    }
+
+    private func copyLocalDefaultConfigToDestination() {
+        let localDefaultPath = configService.localDefaultConfigFile()
+        let savePanel = NSSavePanel()
+        savePanel.allowedFileTypes = ["json"]
+        savePanel.nameFieldStringValue = URL(fileURLWithPath: localDefaultPath).lastPathComponent
+        savePanel.prompt = NSLocalizedString("Copy Config", comment: "")
+
+        guard savePanel.runModal() == .OK, let destinationURL = savePanel.url else {
+            return
+        }
+
+        do {
+            try replaceConfig(at: destinationURL.path, with: localDefaultPath)
+            refreshSettingsWindow()
+        } catch {
+            showNonFatalError(
+                title: NSLocalizedString("Export failed", comment: ""),
+                info: error.localizedDescription
+            )
+        }
+    }
+
+    private func copyActiveConfigToLocalDefault() {
+        let localDefaultPath = configService.localDefaultConfigFile()
+
+        do {
+            try replaceConfig(at: localDefaultPath, with: shuttleConfigFile)
+            refreshSettingsWindow()
+        } catch {
+            showNonFatalError(
+                title: NSLocalizedString("Import failed", comment: ""),
+                info: error.localizedDescription
+            )
+        }
+    }
+}
+
+extension AppDelegate: SettingsWindowControllerDelegate {
+    func settingsWindowControllerDidRequestChooseConfigFile(_ controller: SettingsWindowController) {
+        chooseConfigFile()
+    }
+
+    func settingsWindowControllerDidRequestRevealConfigFile(_ controller: SettingsWindowController) {
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: shuttleConfigFile)])
+    }
+
+    func settingsWindowControllerDidRequestUseLocalDefault(_ controller: SettingsWindowController) {
+        let location = configService.clearSelectedConfigFile()
+        applyConfigLocation(location, reloadMenu: true)
+    }
+
+    func settingsWindowControllerDidRequestRefresh(_ controller: SettingsWindowController) {
+        refreshSettingsWindow()
+    }
+
+    func settingsWindowControllerDidRequestOpenAccessibility(_ controller: SettingsWindowController) {
+        openAccessibilitySettings()
+    }
+
+    func settingsWindowControllerDidRequestOpenAutomation(_ controller: SettingsWindowController) {
+        openAutomationSettings()
+    }
+
+    func settingsWindowControllerDidChangeShowSSHConfigHosts(_ controller: SettingsWindowController, enabled: Bool) {
+        do {
+            try configService.updateShowSSHConfigHosts(enabled, in: shuttleConfigFile)
+            configModified = nil
+            loadMenu()
+            refreshSettingsWindow()
+        } catch {
+            showNonFatalError(
+                title: NSLocalizedString("Config update failed", comment: ""),
+                info: error.localizedDescription
+            )
+        }
+    }
+
+    func settingsWindowControllerDidRequestEditConfig(_ controller: SettingsWindowController) {
+        configure(nil)
+    }
+
+    func settingsWindowControllerDidRequestImportConfig(_ controller: SettingsWindowController) {
+        showImportPanel(nil)
+        refreshSettingsWindow()
+    }
+
+    func settingsWindowControllerDidRequestExportConfig(_ controller: SettingsWindowController) {
+        showExportPanel(nil)
+    }
+
+    func settingsWindowControllerDidRequestCopyLocalDefaultToDestination(_ controller: SettingsWindowController) {
+        copyLocalDefaultConfigToDestination()
+    }
+
+    func settingsWindowControllerDidRequestCopyActiveToLocalDefault(_ controller: SettingsWindowController) {
+        copyActiveConfigToLocalDefault()
     }
 }

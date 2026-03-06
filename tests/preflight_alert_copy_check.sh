@@ -2,10 +2,12 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE="$ROOT_DIR/Shuttle/AppDelegate.swift"
+APP_DELEGATE="$ROOT_DIR/Shuttle/AppDelegate.swift"
+SETTINGS_CONTROLLER="$ROOT_DIR/Shuttle/SettingsWindowController.swift"
 
-grep -q "showPreflightOnboardingIfNeeded" "$SOURCE" || { echo "FAIL: onboarding entrypoint missing" >&2; exit 1; }
-grep -q "Open Privacy Settings" "$SOURCE" || { echo "FAIL: missing privacy settings action" >&2; exit 1; }
-grep -q "Open Config" "$SOURCE" || { echo "FAIL: missing open config action" >&2; exit 1; }
+grep -q "showPreflightOnboardingIfNeeded" "$APP_DELEGATE" || { echo "FAIL: onboarding entrypoint missing" >&2; exit 1; }
+grep -q "showSettings(nil)" "$APP_DELEGATE" || { echo "FAIL: onboarding should route to Settings" >&2; exit 1; }
+grep -q "Open Accessibility" "$SETTINGS_CONTROLLER" || { echo "FAIL: missing accessibility settings action" >&2; exit 1; }
+grep -q "Choose Config File" "$SETTINGS_CONTROLLER" || { echo "FAIL: missing config selection action" >&2; exit 1; }
 
-echo "OK: onboarding alert wiring present."
+echo "OK: onboarding Settings window wiring present."

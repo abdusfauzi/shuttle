@@ -1,0 +1,395 @@
+import Cocoa
+
+protocol SettingsWindowControllerDelegate: AnyObject {
+    func settingsWindowControllerDidRequestChooseConfigFile(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestRevealConfigFile(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestUseLocalDefault(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestRefresh(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestOpenAccessibility(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestOpenAutomation(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidChangeShowSSHConfigHosts(_ controller: SettingsWindowController, enabled: Bool)
+    func settingsWindowControllerDidRequestEditConfig(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestImportConfig(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestExportConfig(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestCopyLocalDefaultToDestination(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestCopyActiveToLocalDefault(_ controller: SettingsWindowController)
+}
+
+struct SettingsWindowState {
+    let configPath: String
+    let configSource: String
+    let configReadable: Bool
+    let accessibilityGranted: Bool
+    let automationGranted: Bool
+    let showSSHConfigHosts: Bool
+    let configFileStatus: String
+    let version: String
+    let maintainer: String
+    let copyright: String
+    let originalHomepage: String?
+    let forkHomepage: String?
+}
+
+@objc(SettingsWindowController)
+final class SettingsWindowController: NSWindowController {
+    weak var settingsDelegate: SettingsWindowControllerDelegate?
+
+    private let summaryLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 13))
+    private let accessibilityStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let automationStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let configStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let configPathLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.userFixedPitchFont(ofSize: 11) ?? NSFont.systemFont(ofSize: 11))
+    private let configSourceLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let versionLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let maintainerLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let copyrightLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 11))
+    private lazy var showSSHConfigHostsButton: NSButton = {
+        let button = NSButton(checkboxWithTitle: NSLocalizedString("Show SSH config hosts", comment: ""), target: self, action: #selector(toggleShowSSHConfigHosts(_:)))
+        button.controlSize = .small
+        return button
+    }()
+
+    private var currentState: SettingsWindowState?
+
+    override func windowDidLoad() {
+        super.windowDidLoad()
+        shouldCascadeWindows = false
+        configureWindow()
+        buildInterface()
+    }
+
+    override func showWindow(_ sender: Any?) {
+        _ = window
+        super.showWindow(sender)
+        window?.center()
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKeyAndOrderFront(nil)
+    }
+
+    func update(with state: SettingsWindowState) {
+        _ = window
+        currentState = state
+        refreshInterface(with: state)
+    }
+
+    private func configureWindow() {
+        window?.title = NSLocalizedString("Shuttle Settings", comment: "")
+        window?.setContentSize(NSSize(width: 720, height: 560))
+        window?.minSize = NSSize(width: 660, height: 520)
+    }
+
+    private func buildInterface() {
+        guard let contentView = window?.contentView else {
+            return
+        }
+
+        let rootStack = NSStackView()
+        rootStack.orientation = .vertical
+        rootStack.alignment = .leading
+        rootStack.distribution = .fill
+        rootStack.spacing = 18
+        rootStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let headerTitle = SettingsWindowController.makeHeadlineLabel(NSLocalizedString("Shuttle Settings", comment: ""))
+        let headerSubtitle = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 13))
+        headerSubtitle.stringValue = NSLocalizedString("Permissions, config location, and app metadata are managed here.", comment: "")
+
+        let headerStack = NSStackView(views: [headerTitle, headerSubtitle])
+        headerStack.orientation = .vertical
+        headerStack.alignment = .leading
+        headerStack.spacing = 6
+
+        rootStack.addArrangedSubview(headerStack)
+        rootStack.addArrangedSubview(makePermissionsSection())
+        rootStack.addArrangedSubview(makeConfigSection())
+        rootStack.addArrangedSubview(makeAboutSection())
+
+        contentView.addSubview(rootStack)
+
+        NSLayoutConstraint.activate([
+            rootStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            rootStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
+            rootStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
+            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -24)
+        ])
+    }
+
+    private func makePermissionsSection() -> NSView {
+        let container = makeSectionContainer(title: NSLocalizedString("Permissions", comment: ""))
+
+        let accessibilityRow = makeActionRow(
+            title: NSLocalizedString("Accessibility", comment: ""),
+            statusLabel: accessibilityStatusLabel,
+            buttons: [
+                makeButton(title: NSLocalizedString("Open Accessibility", comment: ""), action: #selector(openAccessibility(_:)))
+            ]
+        )
+
+        let automationRow = makeActionRow(
+            title: NSLocalizedString("Automation", comment: ""),
+            statusLabel: automationStatusLabel,
+            buttons: [
+                makeButton(title: NSLocalizedString("Open Automation", comment: ""), action: #selector(openAutomation(_:)))
+            ]
+        )
+
+        let refreshRow = NSStackView(views: [
+            summaryLabel,
+            makeButton(title: NSLocalizedString("Refresh Status", comment: ""), action: #selector(refreshStatus(_:)))
+        ])
+        refreshRow.orientation = .horizontal
+        refreshRow.alignment = .centerY
+        refreshRow.spacing = 12
+
+        let body = NSStackView(views: [accessibilityRow, automationRow, refreshRow])
+        body.orientation = .vertical
+        body.alignment = .leading
+        body.spacing = 12
+
+        container.addArrangedSubview(body)
+        return container
+    }
+
+    private func makeConfigSection() -> NSView {
+        let container = makeSectionContainer(title: NSLocalizedString("Config", comment: ""))
+
+        let sourceRow = makeInfoRow(title: NSLocalizedString("Source", comment: ""), valueLabel: configSourceLabel)
+        let pathRow = makeInfoRow(title: NSLocalizedString("Path", comment: ""), valueLabel: configPathLabel)
+        let fileStatusRow = makeInfoRow(title: NSLocalizedString("File", comment: ""), valueLabel: configStatusLabel)
+
+        let buttonRow = NSStackView(views: [
+            makeButton(title: NSLocalizedString("Choose Config File", comment: ""), action: #selector(chooseConfigFile(_:))),
+            makeButton(title: NSLocalizedString("Reveal in Finder", comment: ""), action: #selector(revealConfigFile(_:))),
+            makeButton(title: NSLocalizedString("Use Local Default", comment: ""), action: #selector(useLocalDefault(_:)))
+        ])
+        buttonRow.orientation = .horizontal
+        buttonRow.alignment = .centerY
+        buttonRow.spacing = 8
+
+        let managementRow = NSStackView(views: [
+            makeButton(title: NSLocalizedString("Edit Config", comment: ""), action: #selector(editConfig(_:))),
+            makeButton(title: NSLocalizedString("Import", comment: ""), action: #selector(importConfig(_:))),
+            makeButton(title: NSLocalizedString("Export", comment: ""), action: #selector(exportConfig(_:)))
+        ])
+        managementRow.orientation = .horizontal
+        managementRow.alignment = .centerY
+        managementRow.spacing = 8
+
+        let copyRow = NSStackView(views: [
+            makeButton(title: NSLocalizedString("Copy Local Default To...", comment: ""), action: #selector(copyLocalDefaultToDestination(_:))),
+            makeButton(title: NSLocalizedString("Copy Active To Local Default", comment: ""), action: #selector(copyActiveToLocalDefault(_:)))
+        ])
+        copyRow.orientation = .horizontal
+        copyRow.alignment = .centerY
+        copyRow.spacing = 8
+
+        let body = NSStackView(views: [sourceRow, pathRow, fileStatusRow, showSSHConfigHostsButton, buttonRow, managementRow, copyRow])
+        body.orientation = .vertical
+        body.alignment = .leading
+        body.spacing = 12
+
+        container.addArrangedSubview(body)
+        return container
+    }
+
+    private func makeAboutSection() -> NSView {
+        let container = makeSectionContainer(title: NSLocalizedString("About Shuttle", comment: ""))
+
+        let homepageButton = makeButton(title: NSLocalizedString("Original Author", comment: ""), action: #selector(openOriginalHomepage(_:)))
+        let forkButton = makeButton(title: NSLocalizedString("Project Fork", comment: ""), action: #selector(openForkHomepage(_:)))
+        let buttonRow = NSStackView(views: [homepageButton, forkButton])
+        buttonRow.orientation = .horizontal
+        buttonRow.alignment = .centerY
+        buttonRow.spacing = 8
+
+        let body = NSStackView(views: [versionLabel, maintainerLabel, copyrightLabel, buttonRow])
+        body.orientation = .vertical
+        body.alignment = .leading
+        body.spacing = 10
+
+        container.addArrangedSubview(body)
+        return container
+    }
+
+    private func makeSectionContainer(title: String) -> NSStackView {
+        let titleLabel = SettingsWindowController.makeSectionLabel(title)
+        let container = NSStackView(views: [titleLabel])
+        container.orientation = .vertical
+        container.alignment = .leading
+        container.spacing = 10
+        return container
+    }
+
+    private func makeActionRow(title: String, statusLabel: NSTextField, buttons: [NSButton]) -> NSView {
+        let titleLabel = SettingsWindowController.makeSectionLabel(title)
+        titleLabel.font = NSFont.boldSystemFont(ofSize: 12)
+
+        let buttonsStack = NSStackView(views: buttons)
+        buttonsStack.orientation = .horizontal
+        buttonsStack.alignment = .centerY
+        buttonsStack.spacing = 8
+
+        let row = NSStackView(views: [titleLabel, statusLabel, buttonsStack])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 12
+        return row
+    }
+
+    private func makeInfoRow(title: String, valueLabel: NSTextField) -> NSView {
+        let titleLabel = SettingsWindowController.makeSectionLabel(title)
+        titleLabel.font = NSFont.boldSystemFont(ofSize: 12)
+        titleLabel.setContentHuggingPriority(.required, for: .horizontal)
+
+        let row = NSStackView(views: [titleLabel, valueLabel])
+        row.orientation = .horizontal
+        row.alignment = .top
+        row.spacing = 12
+        return row
+    }
+
+    private func refreshInterface(with state: SettingsWindowState) {
+        accessibilityStatusLabel.stringValue = state.accessibilityGranted ? NSLocalizedString("Granted", comment: "") : NSLocalizedString("Required", comment: "")
+        automationStatusLabel.stringValue = state.automationGranted ? NSLocalizedString("Granted", comment: "") : NSLocalizedString("Required", comment: "")
+        configStatusLabel.stringValue = state.configFileStatus
+        configPathLabel.stringValue = state.configPath
+        configSourceLabel.stringValue = state.configSource
+        versionLabel.stringValue = String(format: NSLocalizedString("Version: %@", comment: ""), state.version)
+        maintainerLabel.stringValue = state.maintainer
+        copyrightLabel.stringValue = state.copyright
+        showSSHConfigHostsButton.state = state.showSSHConfigHosts ? .on : .off
+        showSSHConfigHostsButton.isEnabled = state.configReadable
+        summaryLabel.stringValue = summaryText(for: state)
+    }
+
+    private func summaryText(for state: SettingsWindowState) -> String {
+        var missing: [String] = []
+        if !state.accessibilityGranted {
+            missing.append(NSLocalizedString("Accessibility permission is required.", comment: ""))
+        }
+        if !state.automationGranted {
+            missing.append(NSLocalizedString("Automation permission is required (System Events).", comment: ""))
+        }
+        if !state.configReadable {
+            missing.append(NSLocalizedString("Config file is not readable.", comment: ""))
+        }
+
+        guard !missing.isEmpty else {
+            return NSLocalizedString("Setup is complete. Shuttle is ready to open hosts.", comment: "")
+        }
+
+        return missing.joined(separator: " ")
+    }
+
+    private static func makeHeadlineLabel(_ text: String) -> NSTextField {
+        let label = NSTextField(labelWithString: text)
+        label.font = NSFont.boldSystemFont(ofSize: 24)
+        return label
+    }
+
+    private static func makeSectionLabel(_ text: String) -> NSTextField {
+        let label = NSTextField(labelWithString: text)
+        label.font = NSFont.boldSystemFont(ofSize: 14)
+        return label
+    }
+
+    private static func makeWrappingLabel(font: NSFont) -> NSTextField {
+        let label = NSTextField(labelWithString: "")
+        label.font = font
+        label.lineBreakMode = .byWordWrapping
+        label.cell?.wraps = true
+        label.cell?.usesSingleLineMode = false
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }
+
+    private func makeButton(title: String, action: Selector) -> NSButton {
+        let button = NSButton(title: title, target: self, action: action)
+        button.bezelStyle = .rounded
+        return button
+    }
+
+    @objc private func refreshStatus(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestRefresh(self)
+    }
+
+    @objc private func chooseConfigFile(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestChooseConfigFile(self)
+    }
+
+    @objc private func revealConfigFile(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestRevealConfigFile(self)
+    }
+
+    @objc private func useLocalDefault(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestUseLocalDefault(self)
+    }
+
+    @objc private func openAccessibility(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestOpenAccessibility(self)
+    }
+
+    @objc private func openAutomation(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestOpenAutomation(self)
+    }
+
+    @objc private func editConfig(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestEditConfig(self)
+    }
+
+    @objc private func importConfig(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestImportConfig(self)
+    }
+
+    @objc private func exportConfig(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestExportConfig(self)
+    }
+
+    @objc private func copyLocalDefaultToDestination(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestCopyLocalDefaultToDestination(self)
+    }
+
+    @objc private func copyActiveToLocalDefault(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestCopyActiveToLocalDefault(self)
+    }
+
+    @objc private func toggleShowSSHConfigHosts(_ sender: NSButton) {
+        settingsDelegate?.settingsWindowControllerDidChangeShowSSHConfigHosts(self, enabled: sender.state == .on)
+    }
+
+    @objc private func openOriginalHomepage(_ sender: Any?) {
+        guard let urlString = currentState?.originalHomepage,
+              let url = URL(string: urlString) else {
+            return
+        }
+        openURL(url)
+    }
+
+    @objc private func openForkHomepage(_ sender: Any?) {
+        guard let urlString = currentState?.forkHomepage,
+              let url = URL(string: urlString) else {
+            return
+        }
+        openURL(url)
+    }
+
+    private func openURL(_ url: URL) {
+        guard SecurityPolicies.isAllowedURL(url) else {
+            NSLog("Blocked unexpected URL scheme: %@", url.absoluteString)
+            return
+        }
+
+        if NSWorkspace.shared.open(url) {
+            return
+        }
+
+        do {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            task.arguments = ["-g", url.absoluteString]
+            try task.run()
+        } catch {
+            NSLog("Failed to open URL %@: %@", url.absoluteString, error.localizedDescription)
+        }
+    }
+}

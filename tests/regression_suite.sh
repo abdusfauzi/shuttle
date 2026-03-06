@@ -40,7 +40,12 @@ echo "2) Security review checks"
 echo
 echo
 
-echo "3) AppleScript compile (optional)"
+echo "3) Settings and config flow checks"
+"$ROOT_DIR/tests/settings_window_flow_check.sh"
+"$ROOT_DIR/tests/config_location_resolution_check.sh"
+echo
+
+echo "4) AppleScript compile (optional)"
 if [[ "$WITH_COMPILE" -eq 1 ]]; then
     echo "   Requested: recompiling."
     set +e
@@ -58,12 +63,12 @@ else
 fi
 echo
 
-echo "4) Terminal parity preflight"
+echo "5) Terminal parity preflight"
 "$ROOT_DIR/tests/terminal_parity_resource_check.sh"
 "$ROOT_DIR/tests/terminal_parity_probe.sh"
 echo
 
-echo "5) Terminal parity smoke"
+echo "6) Terminal parity smoke"
 set +e
 "$ROOT_DIR/tests/terminal_parity_smoke.sh"
 smoke_rc=$?
@@ -76,11 +81,11 @@ elif [[ "$smoke_rc" -ne 0 ]]; then
 fi
 echo
 
-echo "6) Latest parity matrix evidence check"
+echo "7) Latest parity matrix evidence check"
 "$ROOT_DIR/tests/terminal_parity_matrix_check.sh"
 echo
 
-echo "7) Build validation"
+echo "8) Build validation"
 xcodebuild \
     -project "$ROOT_DIR/Shuttle.xcodeproj" \
     -scheme Shuttle \

@@ -104,33 +104,113 @@ struct ShuttleConfigSnapshot {
     let ignoreKeywords: [String]
 }
 
+enum ConfigLocationSource {
+    case chosenFile
+    case compatibilityPath
+    case localDefault
+
+    var displayName: String {
+        switch self {
+        case .chosenFile:
+            return "Chosen File"
+        case .compatibilityPath:
+            return ".shuttle.path"
+        case .localDefault:
+            return "Local Default"
+        }
+    }
+}
+
+struct ConfigLocationResolution {
+    let path: String
+    let source: ConfigLocationSource
+}
+
 final class ConfigService {
     private let fileManager: FileManager
+    private let userDefaults: UserDefaults
     private let maxConfigPathLength = 1024
     private let maxConfigFileBytes = 5 * 1024 * 1024
+    private let selectedConfigBookmarkDefaultsKey = "SelectedConfigBookmark"
+    private let selectedConfigPathDefaultsKey = "SelectedConfigPath"
 
-    init(fileManager: FileManager = .default) {
+    init(fileManager: FileManager = .default, userDefaults: UserDefaults = .standard) {
         self.fileManager = fileManager
+        self.userDefaults = userDefaults
     }
 
     func resolveShuttleConfigFile() -> String {
-        let shuttleJSONPathPref = (NSHomeDirectory() as NSString).appendingPathComponent(".shuttle.path")
+        resolveConfigLocation().path
+    }
 
-        if fileManager.fileExists(atPath: shuttleJSONPathPref) {
-            let jsonConfigPath = (try? String(contentsOfFile: shuttleJSONPathPref, encoding: .utf8))?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if let path = validatedConfigPath(jsonConfigPath) {
-                return path
-            }
+    func localDefaultConfigFile() -> String {
+        ensureLocalDefaultConfigFile()
+    }
+
+    func resolveConfigLocation() -> ConfigLocationResolution {
+        if let bookmarkLocation = resolveBookmarkConfigLocation() {
+            return bookmarkLocation
         }
 
-        let shuttleConfigFile = (NSHomeDirectory() as NSString).appendingPathComponent(".shuttle.json")
-        if !fileManager.fileExists(atPath: shuttleConfigFile),
-           let configFileInResource = Bundle.main.path(forResource: "shuttle.default", ofType: "json") {
-            try? fileManager.copyItem(atPath: configFileInResource, toPath: shuttleConfigFile)
+        if let legacyPath = resolveCompatibilityPathLocation() {
+            return legacyPath
         }
 
-        return shuttleConfigFile
+        return ConfigLocationResolution(
+            path: ensureLocalDefaultConfigFile(),
+            source: .localDefault
+        )
+    }
+
+    func saveSelectedConfigFile(at url: URL) throws -> ConfigLocationResolution {
+        guard let normalizedPath = validatedConfigPath(url.path) else {
+            throw NSError(domain: "ShuttleConfig", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: NSLocalizedString("Config file is not readable.", comment: "")
+            ])
+        }
+
+        let normalizedURL = URL(fileURLWithPath: normalizedPath)
+        let bookmarkData = try normalizedURL.bookmarkData(
+            options: [],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+
+        userDefaults.set(bookmarkData, forKey: selectedConfigBookmarkDefaultsKey)
+        userDefaults.set(normalizedPath, forKey: selectedConfigPathDefaultsKey)
+        writeCompatibilityPathPreference(normalizedPath)
+
+        return ConfigLocationResolution(path: normalizedPath, source: .chosenFile)
+    }
+
+    @discardableResult
+    func clearSelectedConfigFile() -> ConfigLocationResolution {
+        userDefaults.removeObject(forKey: selectedConfigBookmarkDefaultsKey)
+        userDefaults.removeObject(forKey: selectedConfigPathDefaultsKey)
+        removeCompatibilityPathPreference()
+
+        return ConfigLocationResolution(
+            path: ensureLocalDefaultConfigFile(),
+            source: .localDefault
+        )
+    }
+
+    func updateShowSSHConfigHosts(_ enabled: Bool, in configPath: String) throws {
+        let expandedPath = (configPath as NSString).expandingTildeInPath
+        guard validateReadableRegularFile(at: expandedPath) else {
+            throw NSError(domain: "ShuttleConfig", code: 2, userInfo: [
+                NSLocalizedDescriptionKey: NSLocalizedString("Config file is not readable.", comment: "")
+            ])
+        }
+
+        guard var json = readConfigDictionary(from: expandedPath) else {
+            throw NSError(domain: "ShuttleConfig", code: 3, userInfo: [
+                NSLocalizedDescriptionKey: NSLocalizedString("Config source is invalid JSON.", comment: "")
+            ])
+        }
+
+        json["show_ssh_config_hosts"] = enabled
+        try writeConfigDictionary(json, to: expandedPath)
     }
 
     private func validatedConfigPath(_ candidate: String?) -> String? {
@@ -169,6 +249,116 @@ final class ConfigService {
         }
 
         return standardized
+    }
+
+    private func resolveBookmarkConfigLocation() -> ConfigLocationResolution? {
+        guard let bookmarkData = userDefaults.data(forKey: selectedConfigBookmarkDefaultsKey) else {
+            return nil
+        }
+
+        var bookmarkIsStale = false
+        do {
+            let resolvedURL = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [],
+                relativeTo: nil,
+                bookmarkDataIsStale: &bookmarkIsStale
+            )
+
+            guard let path = validatedConfigPath(resolvedURL.path) else {
+                clearPersistedBookmark()
+                return nil
+            }
+
+            if bookmarkIsStale {
+                try refreshBookmark(for: URL(fileURLWithPath: path))
+            }
+
+            writeCompatibilityPathPreference(path)
+            userDefaults.set(path, forKey: selectedConfigPathDefaultsKey)
+            return ConfigLocationResolution(path: path, source: .chosenFile)
+        } catch {
+            NSLog("Ignoring stored Shuttle bookmark: %@", error.localizedDescription)
+            clearPersistedBookmark()
+            return nil
+        }
+    }
+
+    private func resolveCompatibilityPathLocation() -> ConfigLocationResolution? {
+        let shuttleJSONPathPref = compatibilityPathPreferenceFile()
+        guard fileManager.fileExists(atPath: shuttleJSONPathPref) else {
+            return nil
+        }
+
+        let jsonConfigPath = (try? String(contentsOfFile: shuttleJSONPathPref, encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let path = validatedConfigPath(jsonConfigPath) else {
+            return nil
+        }
+
+        return ConfigLocationResolution(path: path, source: .compatibilityPath)
+    }
+
+    private func ensureLocalDefaultConfigFile() -> String {
+        let shuttleConfigFile = (NSHomeDirectory() as NSString).appendingPathComponent(".shuttle.json")
+        if !fileManager.fileExists(atPath: shuttleConfigFile),
+           let configFileInResource = Bundle.main.path(forResource: "shuttle.default", ofType: "json") {
+            try? fileManager.copyItem(atPath: configFileInResource, toPath: shuttleConfigFile)
+        }
+        return shuttleConfigFile
+    }
+
+    private func compatibilityPathPreferenceFile() -> String {
+        (NSHomeDirectory() as NSString).appendingPathComponent(".shuttle.path")
+    }
+
+    private func writeCompatibilityPathPreference(_ path: String) {
+        try? (path + "\n").write(
+            toFile: compatibilityPathPreferenceFile(),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+
+    private func removeCompatibilityPathPreference() {
+        let preferencePath = compatibilityPathPreferenceFile()
+        if fileManager.fileExists(atPath: preferencePath) {
+            try? fileManager.removeItem(atPath: preferencePath)
+        }
+    }
+
+    private func clearPersistedBookmark() {
+        userDefaults.removeObject(forKey: selectedConfigBookmarkDefaultsKey)
+        userDefaults.removeObject(forKey: selectedConfigPathDefaultsKey)
+    }
+
+    private func refreshBookmark(for url: URL) throws {
+        let refreshedData = try url.bookmarkData(
+            options: [],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        userDefaults.set(refreshedData, forKey: selectedConfigBookmarkDefaultsKey)
+    }
+
+    private func readConfigDictionary(from path: String) -> [String: Any]? {
+        guard let data = fileManager.contents(atPath: path),
+              let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] else {
+            return nil
+        }
+        return json
+    }
+
+    private func writeConfigDictionary(_ json: [String: Any], to path: String) throws {
+        let jsonData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted])
+        guard var jsonString = String(data: jsonData, encoding: .utf8) else {
+            throw NSError(domain: "ShuttleConfig", code: 4, userInfo: [
+                NSLocalizedDescriptionKey: NSLocalizedString("Unable to replace existing config.", comment: "")
+            ])
+        }
+
+        jsonString.append("\n")
+        try jsonString.write(toFile: path, atomically: true, encoding: .utf8)
     }
 
     private func validateReadableRegularFile(at path: String) -> Bool {

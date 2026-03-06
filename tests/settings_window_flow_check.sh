@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+APP_DELEGATE="$ROOT_DIR/Shuttle/AppDelegate.swift"
+SETTINGS_CONTROLLER="$ROOT_DIR/Shuttle/SettingsWindowController.swift"
+
+grep -q "private var settingsWindowController: SettingsWindowController\\?" "$APP_DELEGATE" || {
+    echo "FAIL: settings window controller property missing" >&2
+    exit 1
+}
+
+grep -q "@IBAction func showSettings" "$APP_DELEGATE" || {
+    echo "FAIL: showSettings action missing" >&2
+    exit 1
+}
+
+grep -q "showSettings(nil)" "$APP_DELEGATE" || {
+    echo "FAIL: preflight should route to Settings" >&2
+    exit 1
+}
+
+if grep -q "Open Privacy Settings" "$APP_DELEGATE"; then
+    echo "FAIL: legacy blocking alert copy still present in AppDelegate" >&2
+    exit 1
+fi
+
+grep -q "window?.center()" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Settings window is not centered on open" >&2
+    exit 1
+}
+
+grep -q "About Shuttle" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: About section missing from Settings window" >&2
+    exit 1
+}
+
+grep -q "Copy Local Default To" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: local-to-destination copy action missing from Settings window" >&2
+    exit 1
+}
+
+grep -q "Copy Active To Local Default" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: active-to-local copy action missing from Settings window" >&2
+    exit 1
+}
+
+echo "OK: settings window flow wiring present."

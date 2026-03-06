@@ -7,6 +7,8 @@
 - `launch_at_login_crash_guard.sh`: validates legacy launch-at-login code does not call unsafe LSSharedFileList pointer conversion.
 - `launch_at_login_isolation_check.sh`: verifies deprecated login-item APIs remain isolated behind a private compatibility helper.
 - `ghostty_launch_policy_check.sh`: verifies Ghostty uses UI-controlled fallback and direct launch policy expectations.
+- `settings_window_flow_check.sh`: verifies onboarding routes into the centered Settings window and that About metadata lives there.
+- `config_location_resolution_check.sh`: verifies bookmark-backed config selection and `.shuttle.path` compatibility resolution remain in place.
 - `terminal_parity_resource_check.sh`: verifies runtime script templates and terminal-routing markers in `Shuttle/AppServices.swift`.
 - `terminal_parity_probe.sh`: verifies preflight and installed terminal app presence/version.
 - `terminal_parity_smoke.sh`: runs preflight + AppleScript handler dispatch + GUI capability checks.

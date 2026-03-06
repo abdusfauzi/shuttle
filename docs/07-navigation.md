@@ -7,11 +7,10 @@
 
 ## Static Actions
 Expected static menu actions include:
-- Import config
-- Export config
-- Configure
-- About
+- Settings
 - Quit
+
+Config edit/import/export actions now live inside the Settings window instead of a menu submenu.
 
 ## Behavior Guarantees
 - Menu refreshes when config or ssh config mtime changes.

@@ -30,6 +30,8 @@ This repository is actively being modernized.
 - Terminal dispatch now uses backend strategy routing for easier parity maintenance and future terminal additions.
 - Launch-at-login now compiles from `LaunchAtLoginController.swift` (bridging header no longer required by target build settings).
 - Active target runtime path is now Swift-only (`main.swift` + Swift app/services/controllers).
+- Setup/onboarding now routes into a centered native Settings window instead of a blocking alert.
+- Settings now owns permissions, config location, SSH-config import toggle, and About metadata in one place.
 
 ### Documentation Overhaul
 A full documentation set has been added to support implementation and migration work:
@@ -43,7 +45,20 @@ A full documentation set has been added to support implementation and migration 
 
 ## Config Notes
 
-Key config fields in `~/.shuttle.json`:
+Shuttle resolves the active config in this order:
+
+- user-selected config file stored by bookmark (`Settings -> Choose Config File`)
+- compatibility path marker in `~/.shuttle.path`
+- local default `~/.shuttle.json`
+
+The selected config file can live anywhere, including iCloud Drive, and Shuttle uses it in place as the active source of truth.
+
+Settings also includes explicit copy actions when you want both locations populated:
+
+- `Copy Local Default To...` copies `~/.shuttle.json` to another destination such as iCloud Drive
+- `Copy Active To Local Default` copies the currently selected config back into `~/.shuttle.json`
+
+Key config fields in the active `.shuttle.json`:
 
 - `terminal`: `Terminal.app`, `Terminal`, `iTerm`, `Warp`, `Ghostty`
 - `iTerm_version`: `stable` or `nightly`
@@ -85,6 +100,7 @@ Run path hygiene checks directly with:
 Notes:
 - In restricted environments, use `-derivedDataPath` (as shown) to avoid permission issues with default Xcode paths.
 - Terminal automation may require Apple Events and Accessibility permissions.
+- On first run, incomplete setup now opens the Settings window with direct actions for Accessibility, Automation, and config selection.
 - `./apple-scripts/compile-all.sh` expects an interactive macOS session; it returns exit code `2` when AppleScript compile services are unavailable (sandbox/headless).
 - `./tests/regression_suite.sh` returns exit code `2` when interactive automation validation is blocked by the environment.
 - `SHUTTLE_DIAGNOSTICS=1` emits opt-in timing logs for config snapshot load, menu build, and terminal dispatch without changing app behavior.
