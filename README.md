@@ -85,6 +85,13 @@ Run the consolidated regression checks with:
 ./tests/regression_suite.sh
 ```
 
+Run real terminal-launch parity checks only when you explicitly want interactive validation:
+
+```bash
+TERMINAL_PARITY_INTERACTIVE_SMOKE=1 ./tests/terminal_parity_smoke.sh
+TERMINAL_PARITY_INTERACTIVE_MATRIX=1 ./tests/terminal_parity_matrix_capture.sh
+```
+
 Enable opt-in runtime timing diagnostics during local runs with:
 
 ```bash
@@ -101,6 +108,7 @@ Notes:
 - In restricted environments, use `-derivedDataPath` (as shown) to avoid permission issues with default Xcode paths.
 - Terminal automation may require Apple Events and Accessibility permissions.
 - On first run, incomplete setup now opens the Settings window with direct actions for Accessibility, Automation, and config selection.
+- Terminal parity smoke/matrix scripts are non-invasive by default; real terminal launches now require explicit interactive opt-in flags.
 - `./apple-scripts/compile-all.sh` expects an interactive macOS session; it returns exit code `2` when AppleScript compile services are unavailable (sandbox/headless).
 - `./tests/regression_suite.sh` returns exit code `2` when interactive automation validation is blocked by the environment.
 - `SHUTTLE_DIAGNOSTICS=1` emits opt-in timing logs for config snapshot load, menu build, and terminal dispatch without changing app behavior.

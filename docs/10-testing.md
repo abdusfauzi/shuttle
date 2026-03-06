@@ -23,17 +23,18 @@ Quick preflight:
 - `./apple-scripts/compile-all.sh` (run only when maintaining legacy `.applescript` sources; requires interactive macOS session, may return `2` in sandbox/headless environments)
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
-- `./tests/terminal_parity_smoke.sh`
+- `./tests/terminal_parity_smoke.sh` (compile-only/non-invasive by default; set `TERMINAL_PARITY_INTERACTIVE_SMOKE=1` for real terminal launches)
 - `./tests/url_launch_detection_check.sh`
 - `./tests/launch_at_login_crash_guard.sh`
 - `./tests/ghostty_launch_policy_check.sh`
 - `./tests/terminal_parity_matrix_check.sh` (checks latest matrix report for PASS status and full cell completion)
+- `./tests/terminal_parity_matrix_capture.sh` (compile-only/non-invasive by default; set `TERMINAL_PARITY_INTERACTIVE_MATRIX=1` for real terminal launches)
 - `./tests/regression_suite.sh` (runs path hygiene + parity preflight + smoke + build; returns `2` if environment blocks GUI automation)
 - `./tests/security_review_check.sh` (verifies command-safety checks and security guard presence in source flow)
 
 Current state (2026-03-06):
 - Backend isolation is implemented in `TerminalRouter`; full matrix execution (M-004) is complete with `20/20` pass in interactive macOS.
-- `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and currently passes in interactive macOS; sandbox/headless environments may still return `2` when GUI automation is unavailable.
+- `./tests/regression_suite.sh` is available for one-shot preflight/smoke/build checks and now uses non-invasive parity tooling by default to avoid permission prompts and stray terminal windows during normal runs.
 - `./tests/terminal_parity_probe.sh` now captures installed terminal versions to strengthen matrix evidence logging.
 - `./tests/security_review_check.sh` and the security review pass are now part of `./tests/regression_suite.sh` as part of the hardening track.
 

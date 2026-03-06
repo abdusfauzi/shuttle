@@ -44,6 +44,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-017 | Publish migration progress dashboard and timeline tracking | Documentation/Operations | done | P2 | unassigned | 2026-03-20 | M-016 | 2026-03-06 | Added `docs/plans/migration-progress-dashboard.md`, linked it in planning docs, and documented the current completion state and remaining balance focus areas.
 | M-018 | Add optional Swift-native runtime diagnostics for migration confidence | Performance/Operations | done | P2 | unassigned | 2026-03-06 | M-017 | 2026-03-06 | Added `RuntimeDiagnostics` timing hooks for config snapshot load, menu build, and terminal dispatch. Added `tests/runtime_diagnostics_check.sh` and integrated it into `./tests/regression_suite.sh`. |
 | M-019 | Isolate macOS 10.13-compatible launch-at-login APIs behind a dedicated compatibility helper | Stability/Compatibility | done | P1 | unassigned | 2026-03-06 | M-018 | 2026-03-06 | Deprecated `LSSharedFileList*` usage is now confined to `LegacyLoginItemStore` inside `LaunchAtLoginController.swift`. Added `tests/launch_at_login_isolation_check.sh` and integrated it into `./tests/regression_suite.sh`. |
+| M-020 | Make parity smoke and matrix tooling safe-by-default for daily regression use | Testing/Hardening | done | P1 | unassigned | 2026-03-06 | M-016 | 2026-03-06 | `terminal_parity_smoke.sh` and `terminal_parity_matrix_capture.sh` now default to compile-only, non-invasive validation. Real terminal launches require `TERMINAL_PARITY_INTERACTIVE_SMOKE=1` or `TERMINAL_PARITY_INTERACTIVE_MATRIX=1`. |
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
@@ -51,8 +52,10 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - `~/.shuttle.path` content and SSH alias input remain editable by user; malformed values can still cause partial menu rendering failures before blocking at execution.
 - Launch-at-login still relies on 10.13-compatible deprecated `LSSharedFileList` APIs, but they are now confined to `LegacyLoginItemStore` and covered by dedicated regression checks.
 - Embedded template parity checks remain permission-sensitive but no longer hang in constrained environments; failures are reported as blocked/fail with deterministic outcomes.
+- Real terminal-window parity execution is now an explicit opt-in path, reducing interruption during normal regression loops.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-020` by making smoke and matrix parity tooling compile-only and non-invasive by default, with explicit interactive opt-in flags for real terminal-launch validation.
 - 2026-03-06: Completed `M-019` by isolating deprecated login-item APIs behind `LegacyLoginItemStore` and adding `tests/launch_at_login_isolation_check.sh` to regression coverage.
 - 2026-03-06: Completed `M-018` by adding opt-in runtime timing diagnostics (`SHUTTLE_DIAGNOSTICS=1`) for config load, menu build, and terminal dispatch, with regression coverage in `tests/runtime_diagnostics_check.sh`.
 - 2026-03-06: Completed `M-017` by publishing `docs/plans/migration-progress-dashboard.md` and linking it into planning indexes for timeline-aware status reporting.
@@ -92,6 +95,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Added `M-020` to make parity validation safe for everyday regression use and reserve real terminal/UI automation for explicit opt-in sessions.
 - 2026-03-06: Added `M-019` to treat 10.13 login-item compatibility as an isolation problem, not a migration blocker, and keep the deprecated surface boxed into one helper.
 - 2026-03-06: Added `M-018` to close the remaining performance-confidence gap with low-risk, opt-in instrumentation instead of a persistent telemetry subsystem.
 - 2026-03-06: Added `M-017` to provide a dedicated migration completion dashboard so stakeholders can answer progress questions with explicit percentages and checkpoints.
