@@ -39,7 +39,10 @@ final class SettingsWindowController: NSWindowController {
     private let tabView = NSTabView()
     private let summaryLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 13))
     private let accessibilityStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let accessibilityDetailLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 11))
     private let automationStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
+    private let automationDetailLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 11))
+    private let lastCheckedLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 11))
     private let configStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
     private let configPathLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.userFixedPitchFont(ofSize: 11) ?? NSFont.systemFont(ofSize: 11))
     private let configSourceLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
@@ -53,6 +56,12 @@ final class SettingsWindowController: NSWindowController {
     }()
 
     private var currentState: SettingsWindowState?
+    private lazy var refreshTimestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .medium
+        return formatter
+    }()
 
     override func windowDidLoad() {
         super.windowDidLoad()
@@ -106,6 +115,7 @@ final class SettingsWindowController: NSWindowController {
         let accessibilityRow = makeActionRow(
             title: NSLocalizedString("Accessibility", comment: ""),
             statusLabel: accessibilityStatusLabel,
+            detailLabel: accessibilityDetailLabel,
             buttons: [
                 makeButton(title: NSLocalizedString("Open Accessibility", comment: ""), action: #selector(openAccessibility(_:)))
             ]
@@ -114,6 +124,7 @@ final class SettingsWindowController: NSWindowController {
         let automationRow = makeActionRow(
             title: NSLocalizedString("Automation", comment: ""),
             statusLabel: automationStatusLabel,
+            detailLabel: automationDetailLabel,
             buttons: [
                 makeButton(title: NSLocalizedString("Open Automation", comment: ""), action: #selector(openAutomation(_:)))
             ]
@@ -127,7 +138,7 @@ final class SettingsWindowController: NSWindowController {
         refreshRow.alignment = .centerY
         refreshRow.spacing = 12
 
-        let body = NSStackView(views: [accessibilityRow, automationRow, refreshRow])
+        let body = NSStackView(views: [accessibilityRow, automationRow, refreshRow, lastCheckedLabel])
         body.orientation = .vertical
         body.alignment = .leading
         body.spacing = 12
@@ -250,19 +261,25 @@ final class SettingsWindowController: NSWindowController {
         return container
     }
 
-    private func makeActionRow(title: String, statusLabel: NSTextField, buttons: [NSButton]) -> NSView {
+    private func makeActionRow(title: String, statusLabel: NSTextField, detailLabel: NSTextField, buttons: [NSButton]) -> NSView {
         let titleLabel = SettingsWindowController.makeSectionLabel(title)
         titleLabel.font = NSFont.boldSystemFont(ofSize: 12)
+        titleLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         let buttonsStack = NSStackView(views: buttons)
         buttonsStack.orientation = .horizontal
         buttonsStack.alignment = .centerY
         buttonsStack.spacing = 8
 
-        let row = NSStackView(views: [titleLabel, statusLabel, buttonsStack])
-        row.orientation = .horizontal
-        row.alignment = .centerY
-        row.spacing = 12
+        let topRow = NSStackView(views: [titleLabel, statusLabel, buttonsStack])
+        topRow.orientation = .horizontal
+        topRow.alignment = .centerY
+        topRow.spacing = 12
+
+        let row = NSStackView(views: [topRow, detailLabel])
+        row.orientation = .vertical
+        row.alignment = .leading
+        row.spacing = 4
         return row
     }
 
@@ -289,6 +306,8 @@ final class SettingsWindowController: NSWindowController {
             required: state.requiresAutomation,
             fallback: NSLocalizedString("On-demand", comment: "")
         )
+        accessibilityDetailLabel.stringValue = accessibilityDetailText(for: state)
+        automationDetailLabel.stringValue = automationDetailText(for: state)
         configStatusLabel.stringValue = state.configFileStatus
         configPathLabel.stringValue = state.configPath
         configSourceLabel.stringValue = state.configSource
@@ -298,6 +317,10 @@ final class SettingsWindowController: NSWindowController {
         showSSHConfigHostsButton.state = state.showSSHConfigHosts ? .on : .off
         showSSHConfigHostsButton.isEnabled = state.configReadable
         summaryLabel.stringValue = summaryText(for: state)
+        lastCheckedLabel.stringValue = String(
+            format: NSLocalizedString("Last checked: %@", comment: ""),
+            refreshTimestampFormatter.string(from: Date())
+        )
     }
 
     private func summaryText(for state: SettingsWindowState) -> String {
@@ -327,6 +350,36 @@ final class SettingsWindowController: NSWindowController {
             return NSLocalizedString("Required", comment: "")
         }
         return fallback
+    }
+
+    private func accessibilityDetailText(for state: SettingsWindowState) -> String {
+        if state.requiresAccessibility {
+            if state.accessibilityGranted {
+                return NSLocalizedString("Granted. Required for the selected terminal/backend.", comment: "")
+            }
+            return NSLocalizedString("Missing. Required for the selected terminal/backend.", comment: "")
+        }
+
+        if state.accessibilityGranted {
+            return NSLocalizedString("Granted, but not required for the selected terminal.", comment: "")
+        }
+
+        return NSLocalizedString("Not currently required for the selected terminal.", comment: "")
+    }
+
+    private func automationDetailText(for state: SettingsWindowState) -> String {
+        if state.requiresAutomation {
+            if state.automationGranted {
+                return NSLocalizedString("Granted. System Events automation is required for the selected terminal/backend.", comment: "")
+            }
+            return NSLocalizedString("Missing. System Events automation is required for the selected terminal/backend.", comment: "")
+        }
+
+        if state.automationGranted {
+            return NSLocalizedString("Granted and available for UI scripting fallbacks.", comment: "")
+        }
+
+        return NSLocalizedString("Not currently required for the selected terminal. Shuttle will request it only when a backend needs System Events.", comment: "")
     }
 
     private static func makeHeadlineLabel(_ text: String) -> NSTextField {

@@ -50,6 +50,16 @@ grep -q 'identifier: "about"' "$SETTINGS_CONTROLLER" || {
     exit 1
 }
 
+grep -q "Last checked:" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Permissions tab does not expose refresh timestamp text" >&2
+    exit 1
+}
+
+grep -q "Not currently required for the selected terminal." "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Permissions tab does not describe optional permission state" >&2
+    exit 1
+}
+
 grep -q "Copy Local Default To" "$SETTINGS_CONTROLLER" || {
     echo "FAIL: local-to-destination copy action missing from Settings window" >&2
     exit 1
