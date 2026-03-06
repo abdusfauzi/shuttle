@@ -33,6 +33,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let menuBuilder = MenuBuilder()
     private let terminalRouter = TerminalRouter()
     private let onboardingPreflight = OnboardingPreflight()
+    private let fileManager = FileManager.default
+
+    private enum ConfigImportError: LocalizedError {
+        case sourceNotReadable
+        case sourceValidationFailed
+        case backupFailed(Error)
+        case replaceFailed(Error)
+        case restoreFailed(Error)
+
+        var errorDescription: String? {
+            switch self {
+            case .sourceNotReadable:
+                return NSLocalizedString("Config source is not readable.", comment: "")
+            case .sourceValidationFailed:
+                return NSLocalizedString("Config source is invalid JSON.", comment: "")
+            case .backupFailed:
+                return NSLocalizedString("Unable to back up existing config.", comment: "")
+            case .replaceFailed:
+                return NSLocalizedString("Unable to replace existing config.", comment: "")
+            case .restoreFailed:
+                return NSLocalizedString("Unable to restore existing config after failed replacement.", comment: "")
+            }
+        }
+    }
 
     override func awakeFromNib() {
         shuttleConfigFile = configService.resolveShuttleConfigFile()
@@ -143,10 +167,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let openPanelObj = NSOpenPanel()
         let result = openPanelObj.runModal()
         if result == .OK, let selectedFileURL = openPanelObj.url {
-            let backupPath = (NSHomeDirectory() as NSString).appendingPathComponent(".shuttle.json.backup")
-            try? FileManager.default.moveItem(atPath: shuttleConfigFile, toPath: backupPath)
-            try? FileManager.default.copyItem(atPath: selectedFileURL.path, toPath: shuttleConfigFile)
-            try? FileManager.default.removeItem(atPath: backupPath)
+            do {
+                try replaceConfig(with: selectedFileURL.path)
+                loadMenu()
+            } catch {
+                showNonFatalError(
+                    title: NSLocalizedString("Import failed", comment: ""),
+                    info: error.localizedDescription
+                )
+            }
         }
     }
 
@@ -154,7 +183,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let savePanelObj = NSSavePanel()
         let result = savePanelObj.runModal()
         if result == .OK, let saveURL = savePanelObj.url {
-            try? FileManager.default.copyItem(atPath: shuttleConfigFile, toPath: saveURL.path)
+            do {
+                try FileManager.default.copyItem(atPath: shuttleConfigFile, toPath: saveURL.path)
+            } catch {
+                showNonFatalError(
+                    title: NSLocalizedString("Export failed", comment: ""),
+                    info: error.localizedDescription
+                )
+            }
         }
     }
 
@@ -258,5 +294,92 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 return
             }
         }
+    }
+
+    private func replaceConfig(with sourcePath: String) throws {
+        let expandedSource = (sourcePath as NSString).expandingTildeInPath
+        guard fileManager.isReadableFile(atPath: expandedSource) else {
+            throw ConfigImportError.sourceNotReadable
+        }
+
+        guard configService.loadConfigSnapshot(from: expandedSource) != nil else {
+            throw ConfigImportError.sourceValidationFailed
+        }
+
+        guard let destinationPath = validatedWritableConfigPath(shuttleConfigFile) else {
+            throw ConfigImportError.replaceFailed(NSError(domain: "Shuttle", code: 1))
+        }
+
+        let stagingPath = (NSTemporaryDirectory() as NSString).appendingPathComponent("shuttle-import-\(UUID().uuidString).json")
+        let backupPath = "\(destinationPath).backup.\(UUID().uuidString)"
+
+        do {
+            try fileManager.copyItem(atPath: expandedSource, toPath: stagingPath)
+        } catch {
+            throw ConfigImportError.replaceFailed(error)
+        }
+
+        defer {
+            if fileManager.fileExists(atPath: stagingPath) {
+                try? fileManager.removeItem(atPath: stagingPath)
+            }
+            if fileManager.fileExists(atPath: backupPath) {
+                try? fileManager.removeItem(atPath: backupPath)
+            }
+        }
+
+        if fileManager.fileExists(atPath: destinationPath) {
+            do {
+                try fileManager.copyItem(atPath: destinationPath, toPath: backupPath)
+            } catch {
+                throw ConfigImportError.backupFailed(error)
+            }
+        }
+
+        do {
+            if fileManager.fileExists(atPath: destinationPath) {
+                try fileManager.removeItem(atPath: destinationPath)
+            }
+            try fileManager.moveItem(atPath: stagingPath, toPath: destinationPath)
+        } catch {
+            if fileManager.fileExists(atPath: backupPath) {
+                do {
+                    try fileManager.removeItem(atPath: destinationPath)
+                } catch {}
+
+                do {
+                    try fileManager.copyItem(atPath: backupPath, toPath: destinationPath)
+                    throw ConfigImportError.replaceFailed(error)
+                } catch {
+                    throw ConfigImportError.restoreFailed(error)
+                }
+            }
+            throw ConfigImportError.replaceFailed(error)
+        }
+    }
+
+    private func validatedWritableConfigPath(_ path: String) -> String? {
+        let expanded = (path as NSString).expandingTildeInPath
+        let standardized = (expanded as NSString).standardizingPath
+
+        var isDirectory: ObjCBool = false
+        if fileManager.fileExists(atPath: standardized, isDirectory: &isDirectory), isDirectory.boolValue {
+            return nil
+        }
+
+        if fileManager.fileExists(atPath: standardized), !fileManager.isWritableFile(atPath: standardized) {
+            return nil
+        }
+
+        return standardized
+    }
+
+    private func showNonFatalError(title: String, info: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = info
+        alert.alertStyle = .critical
+        alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
+        _ = alert.runModal()
     }
 }

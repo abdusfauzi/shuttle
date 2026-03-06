@@ -16,6 +16,8 @@ struct ShuttleConfigSnapshot {
 
 final class ConfigService {
     private let fileManager: FileManager
+    private let maxConfigPathLength = 1024
+    private let maxConfigFileBytes = 5 * 1024 * 1024
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -27,7 +29,9 @@ final class ConfigService {
         if fileManager.fileExists(atPath: shuttleJSONPathPref) {
             let jsonConfigPath = (try? String(contentsOfFile: shuttleJSONPathPref, encoding: .utf8))?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            return jsonConfigPath ?? ""
+            if let path = validatedConfigPath(jsonConfigPath) {
+                return path
+            }
         }
 
         let shuttleConfigFile = (NSHomeDirectory() as NSString).appendingPathComponent(".shuttle.json")
@@ -37,6 +41,44 @@ final class ConfigService {
         }
 
         return shuttleConfigFile
+    }
+
+    private func validatedConfigPath(_ candidate: String?) -> String? {
+        guard let candidate, !candidate.isEmpty else {
+            return nil
+        }
+
+        guard candidate.count <= maxConfigPathLength else {
+            NSLog("Ignoring .shuttle.path: candidate exceeds max length.")
+            return nil
+        }
+
+        let expanded = (candidate as NSString).expandingTildeInPath
+        let standardized = (expanded as NSString).standardizingPath
+
+        guard !standardized.isEmpty && standardized != "/" else {
+            NSLog("Ignoring .shuttle.path: unsafe path value.")
+            return nil
+        }
+
+        guard standardized.count <= maxConfigPathLength else {
+            NSLog("Ignoring .shuttle.path: normalized path exceeds max length.")
+            return nil
+        }
+
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: standardized, isDirectory: &isDirectory),
+              !isDirectory.boolValue else {
+            NSLog("Ignoring .shuttle.path: path is not a regular file.")
+            return nil
+        }
+
+        guard fileManager.isReadableFile(atPath: standardized) else {
+            NSLog("Ignoring .shuttle.path: path is not readable.")
+            return nil
+        }
+
+        return standardized
     }
 
     func needsUpdate(file: String, old: Date?) -> Bool {
@@ -63,7 +105,14 @@ final class ConfigService {
     }
 
     func loadConfigSnapshot(from shuttleConfigFile: String) -> ShuttleConfigSnapshot? {
-        guard let data = fileManager.contents(atPath: shuttleConfigFile),
+        let expandedPath = (shuttleConfigFile as NSString).expandingTildeInPath
+        let attributes = try? fileManager.attributesOfItem(atPath: expandedPath)
+        let size = attributes?[.size] as? NSNumber
+        guard size == nil || size?.intValue ?? 0 <= maxConfigFileBytes else {
+            return nil
+        }
+
+        guard let data = fileManager.contents(atPath: expandedPath),
               let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] else {
             return nil
         }
@@ -199,6 +248,7 @@ final class ConfigService {
 
 final class SSHConfigParser {
     private let fileManager: FileManager
+    private let maxIncludeDepth = 16
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -220,11 +270,27 @@ final class SSHConfigParser {
             return [:]
         }
 
-        return parse(filepath: configFile)
+        var visited = Set<String>()
+        return parse(filepath: configFile, depth: 0, visited: &visited)
     }
 
-    private func parse(filepath: String) -> [String: [String: String]] {
-        let fileContents = (try? String(contentsOfFile: filepath, encoding: .utf8)) ?? ""
+    private func parse(filepath: String, depth: Int, visited: inout Set<String>) -> [String: [String: String]] {
+        guard depth < maxIncludeDepth else {
+            NSLog("Ignoring ssh include depth over \(maxIncludeDepth) at \(filepath)")
+            return [:]
+        }
+
+        let expanded = (filepath as NSString).expandingTildeInPath
+        let normalizedPath = (expanded as NSString).standardizingPath
+
+        guard visited.insert(normalizedPath).inserted else {
+            NSLog("Ignoring cyclic ssh include path: \(normalizedPath)")
+            return [:]
+        }
+
+        guard let fileContents = (try? String(contentsOfFile: normalizedPath, encoding: .utf8)) else {
+            return [:]
+        }
         let pattern = "^(#?)[ \\t]*([^ \\t=]+)[ \\t=]+(.*)$"
         let regex = try? NSRegularExpression(pattern: pattern, options: [])
 
@@ -264,10 +330,10 @@ final class SSHConfigParser {
                 if (second as NSString).isAbsolutePath {
                     includePath = (second as NSString).expandingTildeInPath
                 } else {
-                    includePath = ((filepath as NSString).deletingLastPathComponent as NSString).appendingPathComponent(second)
+                    includePath = ((normalizedPath as NSString).deletingLastPathComponent as NSString).appendingPathComponent(second)
                 }
 
-                for (includeKey, includeValue) in parse(filepath: includePath) {
+                for (includeKey, includeValue) in parse(filepath: includePath, depth: depth + 1, visited: &visited) {
                     servers[includeKey] = includeValue
                 }
             }
@@ -450,6 +516,7 @@ final class TerminalRouter {
         let theme: String
         let title: String
         let mode: OpenMode
+        private static let allowedURLSchemes: Set<String> = ["http", "https", "mailto"]
 
         var scriptParameters: [String] {
             if mode == .virtual {
@@ -473,7 +540,8 @@ final class TerminalRouter {
             }
 
             let scheme = String(trimmedCommand[..<schemeSeparator.lowerBound]).lowercased()
-            guard scheme.range(of: "^[a-z][a-z0-9+.-]*$", options: .regularExpression) != nil else {
+            guard scheme.range(of: "^[a-z][a-z0-9+.-]*$", options: .regularExpression) != nil,
+                  Self.allowedURLSchemes.contains(scheme) else {
                 return nil
             }
 
