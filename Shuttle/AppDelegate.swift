@@ -570,6 +570,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             )
         }
     }
+
+    private func relaunchApplication() {
+        let relaunchTask = Process()
+        relaunchTask.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        relaunchTask.arguments = ["-n", Bundle.main.bundlePath]
+
+        do {
+            try relaunchTask.run()
+            NSApp.terminate(nil)
+        } catch {
+            showNonFatalError(
+                title: NSLocalizedString("Relaunch failed", comment: ""),
+                info: error.localizedDescription
+            )
+        }
+    }
 }
 
 extension AppDelegate: SettingsWindowControllerDelegate {
@@ -588,6 +604,10 @@ extension AppDelegate: SettingsWindowControllerDelegate {
 
     func settingsWindowControllerDidRequestRefresh(_ controller: SettingsWindowController) {
         refreshSettingsWindow()
+    }
+
+    func settingsWindowControllerDidRequestRelaunch(_ controller: SettingsWindowController) {
+        relaunchApplication()
     }
 
     func settingsWindowControllerDidRequestOpenAccessibility(_ controller: SettingsWindowController) {

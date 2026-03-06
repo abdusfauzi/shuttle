@@ -5,6 +5,7 @@ protocol SettingsWindowControllerDelegate: AnyObject {
     func settingsWindowControllerDidRequestRevealConfigFile(_ controller: SettingsWindowController)
     func settingsWindowControllerDidRequestUseLocalDefault(_ controller: SettingsWindowController)
     func settingsWindowControllerDidRequestRefresh(_ controller: SettingsWindowController)
+    func settingsWindowControllerDidRequestRelaunch(_ controller: SettingsWindowController)
     func settingsWindowControllerDidRequestOpenAccessibility(_ controller: SettingsWindowController)
     func settingsWindowControllerDidRequestOpenAutomation(_ controller: SettingsWindowController)
     func settingsWindowControllerDidChangeShowSSHConfigHosts(_ controller: SettingsWindowController, enabled: Bool)
@@ -138,7 +139,14 @@ final class SettingsWindowController: NSWindowController {
         refreshRow.alignment = .centerY
         refreshRow.spacing = 12
 
-        let body = NSStackView(views: [accessibilityRow, automationRow, refreshRow, lastCheckedLabel])
+        let relaunchRow = NSStackView(views: [
+            makeButton(title: NSLocalizedString("Relaunch Shuttle", comment: ""), action: #selector(relaunchShuttle(_:)))
+        ])
+        relaunchRow.orientation = .horizontal
+        relaunchRow.alignment = .centerY
+        relaunchRow.spacing = 12
+
+        let body = NSStackView(views: [accessibilityRow, automationRow, refreshRow, relaunchRow, lastCheckedLabel])
         body.orientation = .vertical
         body.alignment = .leading
         body.spacing = 12
@@ -327,6 +335,7 @@ final class SettingsWindowController: NSWindowController {
         var missing: [String] = []
         if state.requiresAccessibility && !state.accessibilityGranted {
             missing.append(NSLocalizedString("Accessibility permission is required.", comment: ""))
+            missing.append(NSLocalizedString("If you just enabled it in System Settings, relaunch Shuttle to refresh macOS trust.", comment: ""))
         }
         if state.requiresAutomation && !state.automationGranted {
             missing.append(NSLocalizedString("Automation permission is required (System Events).", comment: ""))
@@ -412,6 +421,10 @@ final class SettingsWindowController: NSWindowController {
 
     @objc private func refreshStatus(_ sender: Any?) {
         settingsDelegate?.settingsWindowControllerDidRequestRefresh(self)
+    }
+
+    @objc private func relaunchShuttle(_ sender: Any?) {
+        settingsDelegate?.settingsWindowControllerDidRequestRelaunch(self)
     }
 
     @objc private func chooseConfigFile(_ sender: Any?) {

@@ -55,6 +55,11 @@ grep -q "Last checked:" "$SETTINGS_CONTROLLER" || {
     exit 1
 }
 
+grep -q "Relaunch Shuttle" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Permissions tab does not provide a relaunch recovery action" >&2
+    exit 1
+}
+
 grep -q "Not currently required for the selected terminal." "$SETTINGS_CONTROLLER" || {
     echo "FAIL: Permissions tab does not describe optional permission state" >&2
     exit 1
