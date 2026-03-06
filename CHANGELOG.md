@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-03-06
+
+### Added
+- Added a centered Settings window that now owns permissions, config location management, SSH-config host import toggle, and About metadata.
+- Added bookmark-backed config selection so Shuttle can use a user-selected `.shuttle.json` directly from iCloud Drive or any other location.
+- Added explicit config copy actions to mirror between the local default config and the active selected config location.
+
+### Changed
+- Replaced the old blocking onboarding alert with inline setup guidance in Settings.
+- Made terminal parity smoke and matrix tooling non-invasive by default; real terminal-window launches now require explicit interactive opt-in flags.
+- Updated migration/testing/operations documentation to reflect the Settings-first flow and safe-by-default parity tooling.
+
 ## [2.0.0] - 2026-03-06
 
 ### Added
