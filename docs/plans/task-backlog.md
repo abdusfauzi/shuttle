@@ -43,15 +43,17 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-016 | Stabilize parity check execution under non-interactive AppleScript constraints | Testing/Hardening | done | P1 | unassigned | 2026-03-06 | M-015 | 2026-03-06 | Added bounded execution wrappers for embedded-template checks, made matrix cell execution continue under `set -e`, and normalized captured report paths to avoid workstation-absolute strings.
 | M-017 | Publish migration progress dashboard and timeline tracking | Documentation/Operations | done | P2 | unassigned | 2026-03-20 | M-016 | 2026-03-06 | Added `docs/plans/migration-progress-dashboard.md`, linked it in planning docs, and documented the current completion state and remaining balance focus areas.
 | M-018 | Add optional Swift-native runtime diagnostics for migration confidence | Performance/Operations | done | P2 | unassigned | 2026-03-06 | M-017 | 2026-03-06 | Added `RuntimeDiagnostics` timing hooks for config snapshot load, menu build, and terminal dispatch. Added `tests/runtime_diagnostics_check.sh` and integrated it into `./tests/regression_suite.sh`. |
+| M-019 | Isolate macOS 10.13-compatible launch-at-login APIs behind a dedicated compatibility helper | Stability/Compatibility | done | P1 | unassigned | 2026-03-06 | M-018 | 2026-03-06 | Deprecated `LSSharedFileList*` usage is now confined to `LegacyLoginItemStore` inside `LaunchAtLoginController.swift`. Added `tests/launch_at_login_isolation_check.sh` and integrated it into `./tests/regression_suite.sh`. |
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
 - `~/.shuttle.path` content and SSH alias input remain editable by user; malformed values can still cause partial menu rendering failures before blocking at execution.
-- Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A modern helper is deferred until a compatibility-safe migration path is confirmed.
+- Launch-at-login still relies on 10.13-compatible deprecated `LSSharedFileList` APIs, but they are now confined to `LegacyLoginItemStore` and covered by dedicated regression checks.
 - Embedded template parity checks remain permission-sensitive but no longer hang in constrained environments; failures are reported as blocked/fail with deterministic outcomes.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-019` by isolating deprecated login-item APIs behind `LegacyLoginItemStore` and adding `tests/launch_at_login_isolation_check.sh` to regression coverage.
 - 2026-03-06: Completed `M-018` by adding opt-in runtime timing diagnostics (`SHUTTLE_DIAGNOSTICS=1`) for config load, menu build, and terminal dispatch, with regression coverage in `tests/runtime_diagnostics_check.sh`.
 - 2026-03-06: Completed `M-017` by publishing `docs/plans/migration-progress-dashboard.md` and linking it into planning indexes for timeline-aware status reporting.
 - 2026-03-06: Completed `M-016` by adding timeout-based script execution wrappers, non-fatal matrix progress, and absolute-path-safe report rendering in parity validation flows.
@@ -90,6 +92,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Added `M-019` to treat 10.13 login-item compatibility as an isolation problem, not a migration blocker, and keep the deprecated surface boxed into one helper.
 - 2026-03-06: Added `M-018` to close the remaining performance-confidence gap with low-risk, opt-in instrumentation instead of a persistent telemetry subsystem.
 - 2026-03-06: Added `M-017` to provide a dedicated migration completion dashboard so stakeholders can answer progress questions with explicit percentages and checkpoints.
 - 2026-03-06: Added `M-016` to harden parity verification against non-interactive/permission-limited environments by bounding execution and preserving deterministic failure reporting.
@@ -116,4 +119,4 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 
 ## Next Review Checkpoint
 - Date: 2026-03-06
-- Focus: Re-evaluate the remaining 10.13 launch-at-login legacy surface and decide whether it stays contained as-is or moves to a deferred compatibility track.
+- Focus: Monitor the isolated 10.13 login-item helper and only revisit if the deployment baseline changes.

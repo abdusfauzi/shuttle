@@ -5,6 +5,7 @@
 - `runtime_diagnostics_check.sh`: verifies the optional Swift-native runtime timing hooks remain present for config loading, menu build, and terminal dispatch.
 - `url_launch_detection_check.sh`: verifies URL launch detection uses explicit scheme checks instead of raw URL initialization.
 - `launch_at_login_crash_guard.sh`: validates legacy launch-at-login code does not call unsafe LSSharedFileList pointer conversion.
+- `launch_at_login_isolation_check.sh`: verifies deprecated login-item APIs remain isolated behind a private compatibility helper.
 - `ghostty_launch_policy_check.sh`: verifies Ghostty uses UI-controlled fallback and direct launch policy expectations.
 - `terminal_parity_resource_check.sh`: verifies runtime script templates and terminal-routing markers in `Shuttle/AppServices.swift`.
 - `terminal_parity_probe.sh`: verifies preflight and installed terminal app presence/version.

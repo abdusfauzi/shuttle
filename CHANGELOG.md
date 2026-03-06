@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Ghostty command dispatch now avoids `open -na` instance fan-out and uses direct fallback execution when Automation permission is unavailable.
 - URL launch detection is now strict-scheme only (`://`) to avoid misclassifying shell commands (for example `ssh ...`) as Finder URLs.
 - Added optional `SHUTTLE_DIAGNOSTICS=1` timing logs for startup/menu/dispatch performance validation without changing default runtime behavior.
+- Deprecated macOS 10.13 login-item APIs are now isolated behind a dedicated `LegacyLoginItemStore` compatibility helper with regression guards.
 - About popup has refreshed spacing and now exposes separate links for original project and maintained fork.
 - Minimum supported macOS target is now `10.13` to support older supported environments with the Swift migration baseline.
 - @philippetev Changes to iTerm applescripts to fix issues with settings in iTerm's Preferences/General.

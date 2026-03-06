@@ -18,10 +18,8 @@
 
 ## Known Balance Items (Remaining Focus, Not Blockers)
 
-1. **Stability polish**
-   - Reduce legacy launch-at-login surface where possible while preserving 10.13 support.
-2. **Safety/robustness hardening**
-   - Keep deprecation-sensitive legacy paths isolated and monitor for OS behavior drift.
+1. **Compatibility monitoring**
+   - Keep the isolated 10.13-12.x login-item helper under regression coverage and revisit only if the deployment baseline changes.
 
 ## Timeline
 
@@ -30,10 +28,10 @@
 | 2026-03-05 | Terminal matrix capture completed | done | App | `20/20` matrix validation in `terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`. |
 | 2026-03-06 | Security hardening sweep completed | done | App | New security checks integrated in regression loop. |
 | 2026-03-06 | Runtime diagnostics instrumentation completed | done | App | Optional timing hooks added for config load, menu build, and terminal dispatch; validated by `tests/runtime_diagnostics_check.sh`. |
-| 2026-03-06 | Launch-at-login deprecation-risk containment | partial | App | Legacy path kept for 10.13 compatibility; unsafe sentinel conversion removed; still API-deprecated warnings. |
-| 2026-03-06+ | Balance closeout | in-progress | App | Execute balance items above and archive as needed. |
+| 2026-03-06 | Launch-at-login deprecation-risk containment | done | App | Deprecated login-item APIs are now isolated behind `LegacyLoginItemStore`; crash and isolation guards are part of regression. |
+| 2026-03-06 | Balance closeout | done | App | Remaining work is monitoring only; no open implementation backlog remains. |
 
 ## How to Interpret Progress
 - `100%` means implementation and regression evidence are in place.
-- `partial` timeline entries are production-safe but still have legacy API follow-up.
+- Remaining notes are monitoring/compatibility items, not open migration implementation work.
 - Any timeline entry marked `in-progress` should be expanded into explicit backlog rows before execution.
