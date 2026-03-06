@@ -80,6 +80,11 @@ class AboutWindowController: NSWindowController {
     }
 
     private func openURL(_ url: URL) {
+        guard SecurityPolicies.isAllowedURL(url) else {
+            NSLog("Blocked unexpected URL scheme: %@", url.absoluteString)
+            return
+        }
+
         if NSWorkspace.shared.open(url) {
             return
         }

@@ -290,6 +290,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             guard let url = URL(string: urlString) else {
                 continue
             }
+
+            guard SecurityPolicies.isAllowedURL(url, allowSystemSchemes: true) else {
+                continue
+            }
+
             if NSWorkspace.shared.open(url) {
                 return
             }

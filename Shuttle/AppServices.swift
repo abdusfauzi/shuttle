@@ -1,6 +1,28 @@
 import Cocoa
 import Carbon
 
+enum SecurityPolicies {
+    static let allowedBrowserSchemes: Set<String> = ["http", "https", "mailto"]
+    static let allowedSystemSchemes: Set<String> = ["x-apple.systempreferences"]
+
+    static func isAllowedURL(_ url: URL?, allowSystemSchemes: Bool = false) -> Bool {
+        guard let url else {
+            return false
+        }
+
+        guard let scheme = url.scheme?.lowercased(),
+              !scheme.isEmpty else {
+            return false
+        }
+
+        if allowedBrowserSchemes.contains(scheme) {
+            return true
+        }
+
+        return allowSystemSchemes && allowedSystemSchemes.contains(scheme)
+    }
+}
+
 struct ShuttleConfigSnapshot {
     let terminalPref: String
     let editorPref: String
@@ -516,7 +538,6 @@ final class TerminalRouter {
         let theme: String
         let title: String
         let mode: OpenMode
-        private static let allowedURLSchemes: Set<String> = ["http", "https", "mailto"]
 
         var scriptParameters: [String] {
             if mode == .virtual {
@@ -541,7 +562,7 @@ final class TerminalRouter {
 
             let scheme = String(trimmedCommand[..<schemeSeparator.lowerBound]).lowercased()
             guard scheme.range(of: "^[a-z][a-z0-9+.-]*$", options: .regularExpression) != nil,
-                  Self.allowedURLSchemes.contains(scheme) else {
+                  SecurityPolicies.allowedBrowserSchemes.contains(scheme) else {
                 return nil
             }
 
@@ -734,6 +755,15 @@ final class TerminalRouter {
         )
 
         if let url = launchRequest.launchURL {
+            guard SecurityPolicies.isAllowedURL(url) else {
+                errorHandler(
+                    "Blocked launch URL",
+                    NSLocalizedString("The selected command includes a URL with a blocked scheme.", comment: ""),
+                    false
+                )
+                return
+            }
+
             NSWorkspace.shared.open(url)
             return
         }
