@@ -57,7 +57,7 @@ Default reference config is available at [`Shuttle/shuttle.default.json`](./Shut
 xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Debug -sdk macosx -derivedDataPath /tmp/ShuttleDerivedData build
 ```
 
-If you modify AppleScript sources under `apple-scripts/`, rebuild compiled script resources with:
+If you modify AppleScript sources under `apple-scripts/` for legacy parity/reference needs, rebuild compiled script resources with:
 
 ```bash
 ./apple-scripts/compile-all.sh
@@ -85,7 +85,7 @@ Notes:
 
 - [`Shuttle/`](./Shuttle/) - App source, resources, plist, entitlements
 - [`Shuttle.xcodeproj/`](./Shuttle.xcodeproj/) - Xcode project
-- [`apple-scripts/`](./apple-scripts/) - AppleScript source and compile helpers (`compile-all.sh` is the canonical entrypoint)
+- [`apple-scripts/`](./apple-scripts/) - AppleScript source/reference artifacts and compile helpers (`compile-all.sh` for compatibility checks)
 - [`tests/`](./tests/) - Sample config/test fixtures
 - [`docs/`](./docs/) - Core and operational documentation
 

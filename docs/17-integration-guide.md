@@ -1,7 +1,7 @@
 # 17 - Integration Guide
 
 ## Terminal Integration Strategy
-- Terminal.app and iTerm: prefer script-based control using bundled `.scpt` assets.
+- Terminal.app and iTerm: use Swift-hosted AppleScript template sources embedded in `TerminalScriptCatalog`.
 - Warp: UI automation fallback via AppleScript/System Events.
 - Ghostty: launch via `open` + guarded `--args -e` when needed, with UI-controlled fallback path when Automation permission is available.
 

@@ -8,9 +8,10 @@
 ## Local Build Example
 - `xcodebuild -project Shuttle.xcodeproj -scheme Shuttle -configuration Debug -sdk macosx -derivedDataPath /tmp/ShuttleDerivedData build`
 
-## AppleScript Resource Build
-- Canonical compile entrypoint: `./apple-scripts/compile-all.sh`
-- Script helpers now resolve paths relative to the project root; no user-specific absolute paths are required.
+## AppleScript Runtime & Build Notes
+- Runtime terminal script handlers are embedded in `Shuttle/AppServices.swift` via `TerminalScriptCatalog`.
+- `./apple-scripts/` remains for legacy script sources and compatibility checks.
+- `./apple-scripts/compile-all.sh` now runs as an optional helper and keeps paths project-root-relative; no user-specific absolute paths are required.
 
 ## Runtime File Paths
 - Config path marker: `~/.shuttle.path`

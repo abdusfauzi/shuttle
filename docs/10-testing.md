@@ -20,7 +20,7 @@ Tracking document:
 
 Quick preflight:
 - `./tests/path_hygiene_check.sh` (ensures docs/scripts stay free of hardcoded workstation paths)
-- `./apple-scripts/compile-all.sh` (run when `.applescript` sources change; requires interactive macOS session, may return `2` in sandbox/headless environments)
+- `./apple-scripts/compile-all.sh` (run only when maintaining legacy `.applescript` sources; requires interactive macOS session, may return `2` in sandbox/headless environments)
 - `./tests/terminal_parity_resource_check.sh`
 - `./tests/terminal_parity_probe.sh`
 - `./tests/terminal_parity_smoke.sh`
@@ -40,7 +40,8 @@ Current state (2026-03-06):
 ## Failure Path Tests
 - Missing/invalid `iTerm_version` value.
 - Invalid `inTerminal` value.
-- Missing script resource.
+- Missing embedded script template in `TerminalScriptCatalog`.
+- Denied automation/accessibility permission.
 - Denied automation/accessibility permission.
 
 ## CI/Automation Plan

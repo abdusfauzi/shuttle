@@ -4,7 +4,8 @@
 - `./tests/path_hygiene_check.sh` passes.
 - Build passes on macOS target.
 - Minimum supported macOS target is `10.13`.
-- AppleScript resources are up to date (`./apple-scripts/compile-all.sh` run from interactive macOS session when source scripts changed).
+- AppleScript runtime logic is embedded in `Shuttle/AppServices.swift`.
+- Run `./apple-scripts/compile-all.sh` from an interactive macOS session only when legacy `.applescript` artifacts are edited for archival/reference parity.
 - Entitlements and signing are valid.
 - `./tests/regression_suite.sh` completes with `REGRESSION_PASS` (or `REGRESSION_BLOCKED_ENVIRONMENT` only in known sandbox contexts).
 - Clean signed release build footprint check passes (`rm -rf /tmp/ShuttleSignedBuild` then `./tests/release_bundle_size_check.sh`).

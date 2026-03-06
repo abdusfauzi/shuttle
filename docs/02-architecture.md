@@ -10,7 +10,7 @@
   - `TerminalRouter` + backend strategy implementations
 - Launch-at-login runtime path: `LaunchAtLoginController.swift`.
 - Resources:
-  - AppleScript bundles under `Shuttle/apple-scpt/`
+- Embedded AppleScript templates in `Shuttle/AppServices.swift` (`TerminalScriptCatalog`) used for runtime dispatch
   - Default config `Shuttle/shuttle.default.json`
 
 ## Target Architecture (Fully Swift)

@@ -39,14 +39,19 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-012 | Add matrix evidence verification step to regression suite and docs | Testing/Quality | done | P2 | unassigned | 2026-03-06 | M-011 | 2026-03-06 | Added `tests/terminal_parity_matrix_check.sh` and integrated it into `tests/regression_suite.sh`, docs, and release checklist so parity matrix capture evidence is validated as part of the automated loop. |
 | M-013 | Add terminal script execution failure propagation in router error path | Security/Stability | done | P1 | unassigned | 2026-03-06 | M-012 | 2026-03-06 | Router now treats missing/failed AppleScript dispatch as an actionable error instead of silent no-op and returns `runHost` feedback through the existing error handler. |
 | M-014 | Extend security regression coverage for launch policy and fallback paths | Security | done | P1 | unassigned | 2026-03-06 | M-013 | 2026-03-06 | Added regression coverage for URL-launch detection, launch-at-login pointer-safety, and Ghostty launch-policy fallback checks to the security step in `regression_suite.sh`. |
+| M-015 | Remove `.scpt` dependency from runtime/parity tooling and align checks on embedded templates | Testing/Hardening | done | P0 | unassigned | 2026-03-06 | M-013, M-014 | 2026-03-06 | Updated `Shuttle.xcodeproj` to remove packaged `.scpt` references, switched parity resource checks to inspect embedded `TerminalScriptCatalog` templates, and updated `terminal_parity_smoke.sh`/`terminal_parity_matrix_capture.sh` to execute against Swift-hosted script sources.
+| M-016 | Stabilize parity check execution under non-interactive AppleScript constraints | Testing/Hardening | done | P1 | unassigned | 2026-03-06 | M-015 | 2026-03-06 | Added bounded execution wrappers for embedded-template checks, made matrix cell execution continue under `set -e`, and normalized captured report paths to avoid workstation-absolute strings.
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
 - `~/.shuttle.path` content and SSH alias input remain editable by user; malformed values can still cause partial menu rendering failures before blocking at execution.
 - Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A modern helper is deferred until a compatibility-safe migration path is confirmed.
+- Embedded template parity checks remain permission-sensitive but no longer hang in constrained environments; failures are reported as blocked/fail with deterministic outcomes.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-016` by adding timeout-based script execution wrappers, non-fatal matrix progress, and absolute-path-safe report rendering in parity validation flows.
+- 2026-03-06: Completed `M-015` by removing packaged `.scpt` references from the app target and migrating parity preflight/smoke/matrix scripts to use `TerminalScriptCatalog` templates in `Shuttle/AppServices.swift`.
 - 2026-03-06: Completed `M-014` by adding URL launch detection/launch-at-login/Ghostty policy checks to the security gate and documenting them in test readme/docs.
 - 2026-03-06: Completed `M-013` by making terminal script dispatch return explicit failure states and surfacing failures to users through `errorHandler`.
 - 2026-03-06: Completed `M-011` by adding `tests/security_review_check.sh` and wiring it into `./tests/regression_suite.sh`.
@@ -56,7 +61,7 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-03-06: Completed `M-008` with docs/changelog alignment for Ghostty launch behavior, macOS target baseline, and stale parity-pending entries.
 - 2026-03-06: Completed `M-004` parity matrix capture in interactive macOS session; all 20 cells passed. Evidence: `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`.
 - 2026-03-06: Completed `M-006` hardening scope end-to-end (cleanup, regression suite, path hygiene, and parity evidence).
-- 2026-03-06: Updated `tests/terminal_parity_matrix_capture.sh` to include pass/fail counters, exit status summary, and restore runtime script path targeting for compiled script artifacts under `Shuttle/apple-scpt`.
+- 2026-03-06: Updated `tests/terminal_parity_matrix_capture.sh` to include pass/fail counters, exit status summary, and direct embedded-template execution via `TerminalScriptCatalog`.
 - 2026-03-06: Completed `M-007` archival task: moved legacy Warp helper scripts/compilers into `archive/legacy-scripts/`, removed deprecated `.applescript` and `.scpt` assets from active paths, and updated compile/test policy accordingly.
 - 2026-03-06: Corrected `tests/terminal_parity_matrix_capture.sh` to load AppleScripts from the canonical project script bundle and added pass/fail counters + exit status summary output in the generated matrix report.
 - 2026-03-06: Added manual execution checklist to `docs/plans/terminal-parity-matrix.md` and updated `M-004` task notes for deterministic cell-by-cell parity evidence capture.
@@ -81,8 +86,10 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-25: `AboutWindowController` migrated to Swift and compiled from `AboutWindowController.swift`.
 
 ## Decision Log
+- 2026-03-06: Added `M-016` to harden parity verification against non-interactive/permission-limited environments by bounding execution and preserving deterministic failure reporting.
 - 2026-03-06: Added `M-013` after a security/stability review identified silent failure paths in terminal script execution.
 - 2026-03-06: Added `M-014` to enforce security regression coverage for runtime fallback and automation policy surfaces before concluding migration hardening.
+- 2026-03-06: Added `M-015` to eliminate package-time `.scpt` coupling and make parity validation source-driven through Swift templates.
 - 2026-03-06: Completed `M-008` to keep documentation/changelog aligned with production behavior and avoid stale operational instructions.
 - 2026-03-06: Marked `M-011` complete after source-level security check automation was added to regression suite.
 - 2026-03-06: Added `M-009` with a security posture that prioritizes shell-argument safety and deterministic command validation over compatibility shortcuts.
@@ -102,5 +109,5 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-26: AppleScript compile tooling is root-relative (`./apple-scripts/compile-all.sh`) to avoid workstation-specific path coupling.
 
 ## Next Review Checkpoint
-- Date: 2026-03-22
-- Focus: Complete `M-011`, verify regression suite with security gate, and confirm stability for final migration closure.
+- Date: 2026-03-06
+- Focus: Continue `M-015`/`M-016` hardening outcomes and prepare final migration closure criteria for all terminal support paths.

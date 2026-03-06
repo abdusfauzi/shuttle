@@ -42,7 +42,7 @@ check_pattern "Missing terminal scripts fail fast and surface error" "Unable to 
 check_pattern "Ghostty direct launch validates command safety" "runGhosttyDirect" "$ROOT_DIR/Shuttle/AppServices.swift"
 check_pattern "runGhosttyDirect blocks unsafe commands" "isSafeCommand(command)" "$ROOT_DIR/Shuttle/AppServices.swift"
 check_pattern "About window fallback open command uses background open argument" "task.arguments = [\"-g\", url.absoluteString]" "$ROOT_DIR/Shuttle/AboutWindowController.swift"
-check_pattern "runScript now returns explicit success/failure" "private func runScript(scriptPath" "$ROOT_DIR/Shuttle/AppServices.swift"
+check_pattern "runScript now returns explicit success/failure" "private func runScript(scriptSource" "$ROOT_DIR/Shuttle/AppServices.swift"
 
 if [[ "$fail" -ne 0 ]]; then
     echo "Result: FAIL"

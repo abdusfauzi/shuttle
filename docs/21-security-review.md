@@ -51,6 +51,7 @@ This review covers input handling, command execution paths, and launch-time conf
 - AppleScript UI automation remains the least robust path for Warp/Ghostty and depends on user-granted permissions.
 - Legacy Launch-at-login implementation is kept for macOS 10.13 compatibility and must remain isolated from command execution logic.
 - User-typed JSON still influences which actions are exposed; accidental misconfiguration can still occur and should be treated as a configuration risk with UI guardrails.
+- Runtime parity now depends on embedded template selectors in `TerminalScriptCatalog`; missing or malformed templates should be treated as an integrity defect via `terminal_parity_resource_check.sh`.
 
 ## Residual Action Items
 - Keep `tests/security_review_check.sh` as a required step in regression and release validation.

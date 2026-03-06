@@ -772,36 +772,229 @@ final class TerminalRouter {
         }
     }
 
-    private struct ScriptCatalog {
-        let iTermStableNewWindow: String?
-        let iTermStableCurrentWindow: String?
-        let iTermStableNewTabDefault: String?
+    private enum TerminalScriptCatalog {
+        static let terminalNewWindow = """
+on scriptRun(argsCmd, argsTheme, theTitle)
+    set withCmd to (argsCmd)
+    set withTheme to (argsTheme)
+    set theTitle to (theTitle)
+    CommandRun(withCmd, withTheme, theTitle)
+end scriptRun
 
-        let iTermNightlyNewWindow: String?
-        let iTermNightlyCurrentWindow: String?
-        let iTermNightlyNewTabDefault: String?
+on CommandRun(withCmd, withTheme, theTitle)
+    tell application "Terminal"
+        if it is not running then
+            set newTerm to do script withCmd in window 1
+        else
+            set newTerm to do script withCmd
+        end if
+        activate
+        set newTerm's current settings to settings set withTheme
+        set custom title of front window to theTitle
+    end tell
+end CommandRun
+"""
 
-        let terminalNewWindow: String?
-        let terminalCurrentWindow: String?
-        let terminalNewTabDefault: String?
-        let terminalVirtualWithScreen: String?
+        static let terminalCurrentWindow = """
+on scriptRun(argsCmd)
+    set withCmd to (argsCmd)
+    CommandRun(withCmd)
+end scriptRun
 
-        init(bundle: Bundle = .main) {
-            iTermStableNewWindow = bundle.path(forResource: "iTerm2-stable-new-window", ofType: "scpt")
-            iTermStableCurrentWindow = bundle.path(forResource: "iTerm2-stable-current-window", ofType: "scpt")
-            iTermStableNewTabDefault = bundle.path(forResource: "iTerm2-stable-new-tab-default", ofType: "scpt")
+on CommandRun(withCmd)
+    tell application "Terminal"
+        reopen
+        activate
+        do script withCmd in front window
+    end tell
+end CommandRun
+"""
 
-            iTermNightlyNewWindow = bundle.path(forResource: "iTerm2-nightly-new-window", ofType: "scpt")
-            iTermNightlyCurrentWindow = bundle.path(forResource: "iTerm2-nightly-current-window", ofType: "scpt")
-            iTermNightlyNewTabDefault = bundle.path(forResource: "iTerm2-nightly-new-tab-default", ofType: "scpt")
+        static let terminalNewTabDefault = """
+on scriptRun(argsCmd, argsTheme, theTitle)
+    set withCmd to (argsCmd)
+    set withTheme to (argsTheme)
+    set theTitle to (theTitle)
+    CommandRun(withCmd, withTheme, theTitle)
+end scriptRun
 
-            terminalNewWindow = bundle.path(forResource: "terminal-new-window", ofType: "scpt")
-            terminalCurrentWindow = bundle.path(forResource: "terminal-current-window", ofType: "scpt")
-            terminalNewTabDefault = bundle.path(forResource: "terminal-new-tab-default", ofType: "scpt")
-            terminalVirtualWithScreen = bundle.path(forResource: "virtual-with-screen", ofType: "scpt")
-        }
+on CommandRun(withCmd, withTheme, theTitle)
+    tell application "Terminal"
+        if it is not running then
+            activate
+            set newTerm to do script withCmd in window 1
+            set newTerm's current settings to settings set withTheme
+            set custom title of front window to theTitle
+        else
+            set windowCount to (count every window)
+            if windowCount = 0 then
+                reopen
+                activate
+                do script withCmd in window 1
+            else
+                reopen
+                activate
+                tell application "System Events"
+                    tell process "Terminal"
+                        delay 0.2
+                        keystroke "t" using {command down}
+                    end tell
+                end tell
+                activate
+                do script withCmd in front window
+            end if
+            set current settings of selected tab of front window to settings set withTheme
+            set title displays custom title of front window to true
+            set custom title of selected tab of front window to theTitle
+        end if
+    end tell
+end CommandRun
+"""
 
-        func terminalScript(for mode: OpenMode) -> String? {
+        static let iTermNewWindow = """
+on scriptRun(argsCmd, argsTheme, theTitle)
+    set withCmd to (argsCmd)
+    set withTheme to (argsTheme)
+    set theTitle to (theTitle)
+    CommandRun(withCmd, withTheme, theTitle)
+end scriptRun
+
+on CommandRun(withCmd, withTheme, theTitle)
+    tell application "iTerm"
+        if it is not running then
+            activate
+            if (count windows) is 0 then
+                NewWin(withTheme) of me
+            end if
+        else
+            NewWin(withTheme) of me
+        end if
+        tell the current window
+            tell the current session
+                set name to theTitle
+                write text withCmd
+            end tell
+        end tell
+    end tell
+end CommandRun
+
+on NewWin(argsTheme)
+    tell application "iTerm"
+        try
+            create window with profile argsTheme
+        on error msg
+            create window with profile "Default"
+        end try
+    end tell
+end NewWin
+"""
+
+        static let iTermCurrentWindow = """
+on scriptRun(argsCmd)
+    set withCmd to (argsCmd)
+    CommandRun(withCmd)
+end scriptRun
+
+on CommandRun(withCmd)
+    tell application "iTerm"
+        reopen
+        activate
+        tell the current window
+            tell the current session
+                write text withCmd
+            end tell
+        end tell
+    end tell
+end CommandRun
+"""
+
+        static let iTermNewTabDefault = """
+on scriptRun(argsCmd, argsTheme, theTitle)
+    set withCmd to (argsCmd)
+    set withTheme to (argsTheme)
+    set theTitle to (theTitle)
+    CommandRun(withCmd, withTheme, theTitle)
+end scriptRun
+
+on CommandRun(withCmd, withTheme, theTitle)
+    tell application "iTerm"
+        if it is not running then
+            activate
+            if (count windows) is 0 then
+                NewWin(withTheme) of me
+            end if
+            SetWinParam(theTitle, withCmd) of me
+        else if (count windows) is 0 then
+            NewWin(withTheme) of me
+            SetWinParam(theTitle, withCmd) of me
+        else
+            NewTab(withTheme) of me
+            SetTabParam(theTitle, withCmd) of me
+        end if
+    end tell
+end CommandRun
+
+on NewWin(argsTheme)
+    tell application "iTerm"
+        try
+            create window with profile argsTheme
+        on error msg
+            create window with profile "Default"
+        end try
+    end tell
+end NewWin
+
+on SetWinParam(argsTitle, argsCmd)
+    tell application "iTerm"
+        tell the current window
+            tell the current session
+                set name to argsTitle
+                write text argsCmd
+            end tell
+        end tell
+    end tell
+end SetWinParam
+
+on NewTab(argsTheme)
+    tell application "iTerm"
+        tell the current window
+            try
+                create tab with profile withTheme
+            on error msg
+                create tab with profile "Default"
+            end try
+        end tell
+    end tell
+end NewTab
+
+on SetTabParam(argsTitle, argsCmd)
+    tell application "iTerm"
+        tell the current window
+            tell the current tab
+                tell the current session
+                    set name to argsTitle
+                    write text argsCmd
+                end tell
+            end tell
+        end tell
+    end tell
+end SetTabParam
+"""
+
+        static let virtualWithScreen = """
+on scriptRun(argsCmd, argsTitle)
+    set screenSwitches to "screen -d -m -S "
+    set screenSessionName to "'" & argsTitle & "' "
+    set withCmd to screenSwitches & screenSessionName & argsCmd
+    CommandRun(withCmd)
+end scriptRun
+
+on CommandRun(withCmd)
+    do shell script withCmd
+end CommandRun
+"""
+
+        static func terminalScript(for mode: OpenMode) -> String {
             switch mode {
             case .new:
                 return terminalNewWindow
@@ -810,45 +1003,29 @@ final class TerminalRouter {
             case .tab:
                 return terminalNewTabDefault
             case .virtual:
-                return terminalVirtualWithScreen
+                return virtualWithScreen
             }
         }
 
-        func iTermScript(version: String, mode: OpenMode) -> String? {
-            if mode == .virtual {
-                return terminalVirtualWithScreen
-            }
-
-            if version == "nightly" {
-                switch mode {
-                case .new:
-                    return iTermNightlyNewWindow
-                case .current:
-                    return iTermNightlyCurrentWindow
-                case .tab:
-                    return iTermNightlyNewTabDefault
-                case .virtual:
-                    return terminalVirtualWithScreen
-                }
-            }
-
+        static func iTermScript(version: String, mode: OpenMode) -> String {
             switch mode {
-            case .new:
-                return iTermStableNewWindow
-            case .current:
-                return iTermStableCurrentWindow
-            case .tab:
-                return iTermStableNewTabDefault
             case .virtual:
-                return terminalVirtualWithScreen
+                return virtualWithScreen
+            case .new:
+                return iTermNewWindow
+            case .current:
+                return iTermCurrentWindow
+            case .tab:
+                return iTermNewTabDefault
             }
         }
     }
 
     private struct ExecutionServices {
-        let scripts: ScriptCatalog
         let handlerName: String
-        let runScript: (_ scriptPath: String?, _ handlerName: String, _ parameters: [String]) -> Bool
+        let terminalScript: (OpenMode) -> String
+        let iTermScript: (String, OpenMode) -> String
+        let runScript: (_ scriptSource: String, _ handlerName: String, _ parameters: [String]) -> Bool
         let runUIControlledTerminal: (_ terminalName: String, _ command: String, _ terminalWindow: String, _ errorHandler: ErrorHandler) -> Void
         let runGhosttyDirect: (_ command: String, _ errorHandler: ErrorHandler) -> Void
     }
@@ -863,8 +1040,8 @@ final class TerminalRouter {
 
     private struct TerminalAppBackend: TerminalBackend {
         func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
-            let scriptPath = services.scripts.terminalScript(for: request.mode)
-            if !services.runScript(scriptPath, services.handlerName, request.scriptParameters) {
+            let scriptSource = services.terminalScript(request.mode)
+            if !services.runScript(scriptSource, services.handlerName, request.scriptParameters) {
                 errorHandler(
                     "Unable to run Terminal.app script",
                     NSLocalizedString("The terminal script is missing or failed to load/execute.", comment: ""),
@@ -879,7 +1056,7 @@ final class TerminalRouter {
         func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
             if request.mode == .virtual {
                 if !services.runScript(
-                    services.scripts.terminalVirtualWithScreen,
+                    services.terminalScript(.virtual),
                     services.handlerName,
                     request.scriptParameters
                 ) {
@@ -900,7 +1077,7 @@ final class TerminalRouter {
         func dispatch(request: TerminalLaunchRequest, services: ExecutionServices, errorHandler: ErrorHandler) -> DispatchResult? {
             if request.mode == .virtual {
                 if !services.runScript(
-                    services.scripts.terminalVirtualWithScreen,
+                    services.terminalScript(.virtual),
                     services.handlerName,
                     request.scriptParameters
                 ) {
@@ -947,8 +1124,8 @@ final class TerminalRouter {
                 return nil
             }
 
-            let scriptPath = services.scripts.iTermScript(version: resolvedVersion, mode: request.mode)
-            if !services.runScript(scriptPath, services.handlerName, request.scriptParameters) {
+            let scriptSource = services.iTermScript(resolvedVersion, request.mode)
+            if !services.runScript(scriptSource, services.handlerName, request.scriptParameters) {
                 errorHandler(
                     "Unable to run iTerm script",
                     NSLocalizedString("The iTerm AppleScript is missing or failed to load/execute.", comment: ""),
@@ -1078,12 +1255,16 @@ final class TerminalRouter {
     }
 
     private func makeExecutionServices() -> ExecutionServices {
-        let scripts = ScriptCatalog()
         return ExecutionServices(
-            scripts: scripts,
             handlerName: "scriptRun",
-            runScript: { [weak self] scriptPath, handlerName, parameters in
-                self?.runScript(scriptPath: scriptPath, handler: handlerName, parameters: parameters) ?? false
+            terminalScript: { mode in
+                TerminalScriptCatalog.terminalScript(for: mode)
+            },
+            iTermScript: { version, mode in
+                TerminalScriptCatalog.iTermScript(version: version, mode: mode)
+            },
+            runScript: { [weak self] scriptSource, handlerName, parameters in
+                self?.runScript(scriptSource: scriptSource, handler: handlerName, parameters: parameters) ?? false
             },
             runUIControlledTerminal: { [weak self] terminalName, command, terminalWindow, errorHandler in
                 self?.runCommandInUIControlledTerminal(
@@ -1119,14 +1300,14 @@ final class TerminalRouter {
         }
     }
 
-    private func runScript(scriptPath: String?, handler handlerName: String, parameters parametersInArray: [String]) -> Bool {
-        guard let scriptPath else {
+    private func runScript(scriptSource: String, handler handlerName: String, parameters parametersInArray: [String]) -> Bool {
+        guard !scriptSource.isEmpty else {
             NSLog("Blocked: attempted to run missing script for handler %@", handlerName)
             return false
         }
 
-        guard let appleScript = cachedScript(at: scriptPath) else {
-            NSLog("Failed to load terminal script %@", scriptPath)
+        guard let appleScript = cachedScript(source: scriptSource) else {
+            NSLog("Failed to compile terminal script")
             return false
         }
 
@@ -1170,21 +1351,24 @@ final class TerminalRouter {
         return true
     }
 
-    private func cachedScript(at path: String) -> NSAppleScript? {
-        if let cached = scriptCache[path] {
+    private func cachedScript(source: String) -> NSAppleScript? {
+        if let cached = scriptCache[source] {
             return cached
         }
 
-        let pathURL = URL(fileURLWithPath: path)
-        var appleScriptCreationError: NSDictionary?
-        guard let appleScript = NSAppleScript(contentsOf: pathURL, error: &appleScriptCreationError) else {
-            if let errorDetails = appleScriptCreationError {
-                NSLog("Failed to load AppleScript at %@: %@", path, errorDetails)
-            }
+        guard let appleScript = NSAppleScript(source: source) else {
+            NSLog("Failed to instantiate terminal AppleScript source")
             return nil
         }
 
-        scriptCache[path] = appleScript
+        var compileError: NSDictionary?
+        _ = appleScript.compileAndReturnError(&compileError)
+        if let compileError {
+            NSLog("Failed to compile terminal script: %@", compileError)
+            return nil
+        }
+
+        scriptCache[source] = appleScript
         return appleScript
     }
 

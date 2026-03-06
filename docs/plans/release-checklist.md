@@ -19,7 +19,7 @@ Final pre-release checklist for the Swift migration branch.
 | # | Check | Command / Action | Expected Result | Status | Notes |
 |---|---|---|---|---|---|
 | 1 | Path hygiene | `./tests/path_hygiene_check.sh` | No workstation-specific absolute paths in docs/scripts/tests | pass | 2026-03-06 run |
-| 2 | Resource + routing preflight | `./tests/terminal_parity_resource_check.sh` | Required `.scpt` resources and routing markers present | pass | 2026-03-06 run |
+| 2 | Resource + routing preflight | `./tests/terminal_parity_resource_check.sh` | Required embedded terminal script templates and routing markers present | pass | 2026-03-06 run |
 | 3 | Environment probe | `./tests/terminal_parity_probe.sh` | Terminal availability + versions recorded | pass | 2026-03-06 run |
 | 4 | Security regression check | `./tests/security_review_check.sh` | Security guard presence checks all pass | pass | 2026-03-06 run |
 | 5 | AppleScript compile (if source changed) | `./apple-scripts/compile-all.sh` | Scripts compile; no `BLOCKED_ENVIRONMENT` | pass | 2026-03-06 run |

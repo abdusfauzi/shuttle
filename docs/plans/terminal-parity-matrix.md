@@ -14,13 +14,12 @@ Track behavior parity for command dispatch across supported terminals and open m
 - App builds successfully on current branch.
 - macOS Automation and Accessibility permissions are granted for tested terminal apps.
 - `~/.shuttle.json` has terminal-specific test commands.
-- If `.applescript` sources were changed, run `./apple-scripts/compile-all.sh` first (interactive macOS session required; sandbox/headless returns `2`).
+- If legacy `.applescript` sources were changed, run `./apple-scripts/compile-all.sh` first (interactive macOS session required; sandbox/headless returns `2`).
 
 ## Quick Smoke Gate
-Run resource and routing marker check before manual validation:
+Run embedded-template and routing marker check before manual validation:
 
 ```bash
-./apple-scripts/compile-all.sh
 ./tests/terminal_parity_resource_check.sh
 ```
 
@@ -45,7 +44,7 @@ Status values: `pending`, `pass`, `fail`, `blocked`
 ## Failure Paths
 - Invalid `inTerminal` value in host entry.
 - Missing or invalid `iTerm_version`.
-- Missing script resource.
+- Missing embedded script template in `TerminalScriptCatalog`.
 - Denied automation/accessibility permission.
 
 ## Execution Notes

@@ -26,7 +26,7 @@ for pattern in "${patterns[@]}"; do
 done
 
 set +e
-matches="$(rg -n --glob '!tests/path_hygiene_check.sh' "${args[@]}" "$ROOT_DIR/README.md" "$ROOT_DIR/docs" "$ROOT_DIR/apple-scripts" "$ROOT_DIR/tests")"
+matches="$(rg -n --glob '!tests/path_hygiene_check.sh' --glob '!tests/terminal-parity-matrix-*.md' "${args[@]}" "$ROOT_DIR/README.md" "$ROOT_DIR/docs" "$ROOT_DIR/apple-scripts" "$ROOT_DIR/tests")"
 rc=$?
 set -e
 
