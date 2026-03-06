@@ -14,6 +14,11 @@ if ! /usr/bin/grep -q 'isGhosttyPermissionFailure' "$SOURCE_FILE"; then
     exit 1
 fi
 
+if ! /usr/bin/grep -q 'request.mode == .new && isGhosttyPermissionFailure(info)' "$SOURCE_FILE"; then
+    echo "FAIL: Ghostty direct fallback is not limited to new-window mode." >&2
+    exit 1
+fi
+
 if ! /usr/bin/grep -q 'not authorized to send apple events to system events' "$SOURCE_FILE"; then
     echo "FAIL: Ghostty AppleEvents authorization fallback trigger is missing." >&2
     exit 1

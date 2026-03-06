@@ -1315,8 +1315,16 @@ end CommandRun
                 }
             } else {
                 services.runUIControlledTerminal("Ghostty", request.command, request.mode.rawValue) { message, info, canContinue in
-                    if isGhosttyPermissionFailure(info) {
+                    if request.mode == .new && isGhosttyPermissionFailure(info) {
                         services.runGhosttyDirect(request.command, errorHandler)
+                        return
+                    }
+                    if isGhosttyPermissionFailure(info) {
+                        errorHandler(
+                            NSLocalizedString("Ghostty tab or current-session launch requires Accessibility permission.", comment: ""),
+                            NSLocalizedString("Grant Accessibility permission in Shuttle Settings to use Ghostty with \"open_in\": \"tab\" or \"current\". Without Accessibility, Shuttle can only fall back to opening a new Ghostty window.", comment: ""),
+                            false
+                        )
                         return
                     }
                     errorHandler(message, info, canContinue)

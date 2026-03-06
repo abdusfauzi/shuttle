@@ -13,5 +13,10 @@ grep -q "configReadable && (!requiresAccessibility || accessibilityGranted)" "$S
     echo "FAIL: preflight still blocks launch on blanket automation readiness" >&2
     exit 1
 }
+grep -q 'case "ghostty"' "$SOURCE_FILE" || { echo "FAIL: Ghostty accessibility requirements are not modeled." >&2; exit 1; }
+grep -q 'return openMode == "tab" || openMode == "current"' "$SOURCE_FILE" || {
+    echo "FAIL: Ghostty tab/current modes are not marked as requiring Accessibility." >&2
+    exit 1
+}
 
 echo "OK: preflight service baseline present."

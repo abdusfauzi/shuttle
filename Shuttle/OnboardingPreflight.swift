@@ -42,6 +42,8 @@ final class OnboardingPreflight {
         switch terminal {
         case "warp":
             return true
+        case "ghostty":
+            return openMode == "tab" || openMode == "current"
         default:
             return false
         }
