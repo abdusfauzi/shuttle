@@ -24,7 +24,17 @@ if ! /usr/bin/grep -q 'not allowed to send keystrokes' "$SOURCE_FILE"; then
     exit 1
 fi
 
-if ! /usr/bin/grep -q 'openTask.arguments = \["-a", "Ghostty", "--args", "-e", "/bin/zsh", "-lc", command\]' "$SOURCE_FILE"; then
+if ! /usr/bin/grep -q 'runningApplications(withBundleIdentifier: "com.mitchellh.ghostty")' "$SOURCE_FILE"; then
+    echo "FAIL: Ghostty direct launch does not detect a running app instance." >&2
+    exit 1
+fi
+
+if ! /usr/bin/grep -q '"-n", "-a", "Ghostty"' "$SOURCE_FILE"; then
+    echo "FAIL: Ghostty direct launch does not force a fresh launch when Ghostty is already running." >&2
+    exit 1
+fi
+
+if ! /usr/bin/grep -q '"--args", "-e", "/bin/zsh", "-lc", command' "$SOURCE_FILE"; then
     echo "FAIL: Ghostty direct launch does not use safe shell argument form." >&2
     exit 1
 fi

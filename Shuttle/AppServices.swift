@@ -1532,7 +1532,10 @@ end CommandRun
         do {
             let openTask = Process()
             openTask.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            openTask.arguments = ["-a", "Ghostty", "--args", "-e", "/bin/zsh", "-lc", command]
+            let isGhosttyRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: "com.mitchellh.ghostty").isEmpty
+            openTask.arguments = isGhosttyRunning
+                ? ["-n", "-a", "Ghostty", "--args", "-e", "/bin/zsh", "-lc", command]
+                : ["-a", "Ghostty", "--args", "-e", "/bin/zsh", "-lc", command]
             try openTask.run()
         } catch {
             errorHandler("Unable to run command in Ghostty.", error.localizedDescription, false)
