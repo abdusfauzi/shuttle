@@ -1315,7 +1315,7 @@ end CommandRun
                 }
             } else {
                 services.runUIControlledTerminal("Ghostty", request.command, request.mode.rawValue) { message, info, canContinue in
-                    if info.contains("Not authorized to send Apple events to System Events") {
+                    if isGhosttyPermissionFailure(info) {
                         services.runGhosttyDirect(request.command, errorHandler)
                         return
                     }
@@ -1323,6 +1323,13 @@ end CommandRun
                 }
             }
             return nil
+        }
+
+        private func isGhosttyPermissionFailure(_ errorInfo: String) -> Bool {
+            let normalized = errorInfo.lowercased()
+            return normalized.contains("not authorized to send apple events to system events")
+                || normalized.contains("not allowed to send keystrokes")
+                || normalized.contains("not allowed assistive access")
         }
     }
 

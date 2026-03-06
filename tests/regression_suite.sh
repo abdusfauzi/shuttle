@@ -37,6 +37,7 @@ echo "2) Security review checks"
 "$ROOT_DIR/tests/launch_at_login_crash_guard.sh"
 "$ROOT_DIR/tests/launch_at_login_isolation_check.sh"
 "$ROOT_DIR/tests/ghostty_launch_policy_check.sh"
+"$ROOT_DIR/tests/ghostty_automation_fallback_check.sh"
 echo
 echo
 

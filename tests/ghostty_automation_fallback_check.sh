@@ -9,8 +9,18 @@ if ! /usr/bin/grep -q 'runGhosttyDirect' "$SOURCE_FILE"; then
     exit 1
 fi
 
-if ! /usr/bin/grep -q 'Not authorized to send Apple events to System Events' "$SOURCE_FILE"; then
+if ! /usr/bin/grep -q 'isGhosttyPermissionFailure' "$SOURCE_FILE"; then
+    echo "FAIL: Ghostty permission-failure matcher is missing." >&2
+    exit 1
+fi
+
+if ! /usr/bin/grep -q 'not authorized to send apple events to system events' "$SOURCE_FILE"; then
     echo "FAIL: Ghostty AppleEvents authorization fallback trigger is missing." >&2
+    exit 1
+fi
+
+if ! /usr/bin/grep -q 'not allowed to send keystrokes' "$SOURCE_FILE"; then
+    echo "FAIL: Ghostty keystroke permission fallback trigger is missing." >&2
     exit 1
 fi
 
