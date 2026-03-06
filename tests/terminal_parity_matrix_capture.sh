@@ -6,6 +6,71 @@ APP_SERVICES="$ROOT_DIR/Shuttle/AppServices.swift"
 DATE_UTC="$(date -u +%F_%H-%M-%SZ)"
 REPORT_FILE="$ROOT_DIR/tests/terminal-parity-matrix-capture-${DATE_UTC}.md"
 APPLE_SCRIPT_TIMEOUT_SECONDS="${TERMINAL_PARITY_APPLESCRIPT_TIMEOUT_SECONDS:-8}"
+MATRIX_SMOKE_WINDOW_TITLE="Shuttle Matrix $(date -u +%H%M%S)-$$"
+
+cleanup_matrix_terminal_artifacts() {
+  local cleanup_script
+
+  if [[ -z "${MATRIX_SMOKE_WINDOW_TITLE:-}" ]] || ! command -v osascript >/dev/null 2>&1; then
+    return 0
+  fi
+
+  cleanup_script="$(mktemp)"
+  {
+cat <<EOF
+on run argv
+  set marker to item 1 of argv
+
+  tell application "Terminal"
+    if it is running then
+      repeat with wi from (count windows) to 1 by -1
+        set targetWindow to window wi
+        repeat with ti from (count tabs of targetWindow) to 1 by -1
+          try
+            if (custom title of tab ti of targetWindow) is marker then
+              close tab ti of targetWindow
+            end if
+          end try
+        end repeat
+        try
+          if (count tabs of targetWindow) is 0 then
+            close targetWindow
+          end if
+        end try
+      end repeat
+    end if
+  end tell
+
+  tell application "iTerm"
+    if it is running then
+      repeat with wi from (count windows) to 1 by -1
+        set targetWindow to window wi
+        repeat with si from (count sessions of targetWindow) to 1 by -1
+          try
+            if (name of session si of targetWindow) is marker then
+              close session si of targetWindow
+            end if
+          end try
+        end repeat
+        try
+          if (count sessions of targetWindow) is 0 then
+            close targetWindow
+          end if
+        end try
+      end repeat
+    end if
+  end tell
+end run
+EOF
+} > "$cleanup_script"
+
+  set +e
+  osascript "$cleanup_script" "$MATRIX_SMOKE_WINDOW_TITLE" >/dev/null 2>&1 || true
+  rm -f "$cleanup_script"
+  set -e
+}
+
+trap cleanup_matrix_terminal_artifacts EXIT
 
 if [[ ! -x "$ROOT_DIR/tests/terminal_parity_resource_check.sh" || ! -x "$ROOT_DIR/tests/terminal_parity_probe.sh" ]]; then
     echo "FAIL: required parity scripts are not executable" >&2
@@ -231,28 +296,28 @@ echo "| Terminal | mode | status | result | notes |" >> "$REPORT_FILE"
 echo "|---|---|---|---|---|" >> "$REPORT_FILE"
 
 set +e
-run_embedded_script "Terminal.app" "new" "terminalNewWindow" "shuttle-matrix" "basic" "Shuttle Matrix"
-run_embedded_script "Terminal.app" "tab" "terminalNewTabDefault" "shuttle-matrix" "basic" "Shuttle Matrix"
-run_embedded_script "Terminal.app" "current" "terminalCurrentWindow" "shuttle-matrix" "basic" "Shuttle Matrix"
+run_embedded_script "Terminal.app" "new" "terminalNewWindow" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
+run_embedded_script "Terminal.app" "tab" "terminalNewTabDefault" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
+run_embedded_script "Terminal.app" "current" "terminalCurrentWindow" "shuttle-matrix" "basic" "$MATRIX_SMOKE_WINDOW_TITLE"
 run_embedded_script "Terminal.app" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_embedded_script "iTerm (stable)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "Shuttle Matrix"
-run_embedded_script "iTerm (stable)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "Shuttle Matrix"
-run_embedded_script "iTerm (stable)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "Shuttle Matrix"
+run_embedded_script "iTerm (stable)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+run_embedded_script "iTerm (stable)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+run_embedded_script "iTerm (stable)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
 run_embedded_script "iTerm (stable)" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_embedded_script "iTerm (nightly)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "Shuttle Matrix"
-run_embedded_script "iTerm (nightly)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "Shuttle Matrix"
-run_embedded_script "iTerm (nightly)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "Shuttle Matrix"
+run_embedded_script "iTerm (nightly)" "new" "iTermNewWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+run_embedded_script "iTerm (nightly)" "tab" "iTermNewTabDefault" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
+run_embedded_script "iTerm (nightly)" "current" "iTermCurrentWindow" "shuttle-matrix" "Default" "$MATRIX_SMOKE_WINDOW_TITLE"
 run_embedded_script "iTerm (nightly)" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_ui_controlled_terminal "Warp" "Warp" "new" "shuttle-matrix"
-run_ui_controlled_terminal "Warp" "Warp" "tab" "shuttle-matrix"
+run_ui_controlled_terminal "Warp" "Warp" "new" "shuttle-matrix; exit"
+run_ui_controlled_terminal "Warp" "Warp" "tab" "shuttle-matrix; exit"
 run_ui_controlled_terminal "Warp" "Warp" "current" "shuttle-matrix"
 run_embedded_script "Warp" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 
-run_ui_controlled_terminal "Ghostty" "Ghostty" "new" "shuttle-matrix"
-run_ui_controlled_terminal "Ghostty" "Ghostty" "tab" "shuttle-matrix"
+run_ui_controlled_terminal "Ghostty" "Ghostty" "new" "shuttle-matrix; exit"
+run_ui_controlled_terminal "Ghostty" "Ghostty" "tab" "shuttle-matrix; exit"
 run_ui_controlled_terminal "Ghostty" "Ghostty" "current" "shuttle-matrix"
 run_embedded_script "Ghostty" "virtual" "virtualWithScreen" "shuttle-matrix" "Shuttle Matrix"
 set -e
