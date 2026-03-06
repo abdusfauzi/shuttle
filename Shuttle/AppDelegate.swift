@@ -137,12 +137,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             themePref: themePref
         )
 
-        menuBuilder.buildMenu(
-            shuttleHosts,
-            addToMenu: menu,
-            target: self,
-            action: #selector(openHost(_:))
-        )
+        RuntimeDiagnostics.measure("menu.build", details: "hosts=\(shuttleHosts.count)") {
+            menuBuilder.buildMenu(
+                shuttleHosts,
+                addToMenu: menu,
+                target: self,
+                action: #selector(openHost(_:))
+            )
+        }
     }
 
     @IBAction func openHost(_ sender: NSMenuItem) {

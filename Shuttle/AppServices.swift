@@ -58,6 +58,39 @@ enum SecurityPolicies {
     }
 }
 
+enum RuntimeDiagnostics {
+    private static let enabledEnvironmentKey = "SHUTTLE_DIAGNOSTICS"
+    private static let enabledDefaultsKey = "RuntimeDiagnosticsEnabled"
+
+    static func measure<T>(_ name: String, details: String? = nil, block: () -> T) -> T {
+        let start = CFAbsoluteTimeGetCurrent()
+        let value = block()
+        let elapsedMilliseconds = (CFAbsoluteTimeGetCurrent() - start) * 1000
+        log(name: name, elapsedMilliseconds: elapsedMilliseconds, details: details)
+        return value
+    }
+
+    private static func isEnabled() -> Bool {
+        let environmentValue = ProcessInfo.processInfo.environment[enabledEnvironmentKey]?.lowercased()
+        if environmentValue == "1" || environmentValue == "true" || environmentValue == "yes" {
+            return true
+        }
+        return UserDefaults.standard.bool(forKey: enabledDefaultsKey)
+    }
+
+    private static func log(name: String, elapsedMilliseconds: Double, details: String?) {
+        guard isEnabled() else {
+            return
+        }
+
+        if let details, !details.isEmpty {
+            NSLog("Diagnostics[%@] %.2f ms %@", name, elapsedMilliseconds, details)
+        } else {
+            NSLog("Diagnostics[%@] %.2f ms", name, elapsedMilliseconds)
+        }
+    }
+}
+
 struct ShuttleConfigSnapshot {
     let terminalPref: String
     let editorPref: String
@@ -179,46 +212,49 @@ final class ConfigService {
     }
 
     func loadConfigSnapshot(from shuttleConfigFile: String) -> ShuttleConfigSnapshot? {
-        let expandedPath = (shuttleConfigFile as NSString).expandingTildeInPath
-        guard validateReadableRegularFile(at: expandedPath) else {
-            return nil
+        let details = URL(fileURLWithPath: shuttleConfigFile).lastPathComponent
+        return RuntimeDiagnostics.measure("config.loadSnapshot", details: details) {
+            let expandedPath = (shuttleConfigFile as NSString).expandingTildeInPath
+            guard validateReadableRegularFile(at: expandedPath) else {
+                return nil
+            }
+
+            let attributes = try? fileManager.attributesOfItem(atPath: expandedPath)
+            let size = attributes?[.size] as? NSNumber
+            guard size == nil || size?.intValue ?? 0 <= maxConfigFileBytes else {
+                return nil
+            }
+
+            guard let data = fileManager.contents(atPath: expandedPath),
+                  let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] else {
+                return nil
+            }
+
+            let terminalPref = normalizedTerminalPreference(json["terminal"])
+            let editorPref = (json["editor"] as? String)?.lowercased() ?? "default"
+            let iTermVersionPref = (json["iTerm_version"] as? String)?.lowercased()
+            let sanitizedOpenIn = SecurityPolicies.sanitizeOpenMode((json["open_in"] as? String))
+            let themePref = json["default_theme"] as? String
+            let launchAtLogin = (json["launch_at_login"] as? Bool) ?? false
+
+            let hosts = (json["hosts"] as? [Any]) ?? []
+            let ignoreHosts = ((json["ssh_config_ignore_hosts"] as? [Any]) ?? []).compactMap { $0 as? String }
+            let ignoreKeywords = ((json["ssh_config_ignore_keywords"] as? [Any]) ?? []).compactMap { $0 as? String }
+            let showSSHConfigHosts = (json["show_ssh_config_hosts"] as? Bool) ?? true
+
+            return ShuttleConfigSnapshot(
+                terminalPref: terminalPref,
+                editorPref: editorPref,
+                iTermVersionPref: iTermVersionPref,
+                openInPref: sanitizedOpenIn,
+                themePref: themePref,
+                launchAtLogin: launchAtLogin,
+                showSSHConfigHosts: showSSHConfigHosts,
+                hosts: hosts,
+                ignoreHosts: ignoreHosts,
+                ignoreKeywords: ignoreKeywords
+            )
         }
-
-        let attributes = try? fileManager.attributesOfItem(atPath: expandedPath)
-        let size = attributes?[.size] as? NSNumber
-        guard size == nil || size?.intValue ?? 0 <= maxConfigFileBytes else {
-            return nil
-        }
-
-        guard let data = fileManager.contents(atPath: expandedPath),
-              let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] else {
-            return nil
-        }
-
-        let terminalPref = normalizedTerminalPreference(json["terminal"])
-        let editorPref = (json["editor"] as? String)?.lowercased() ?? "default"
-        let iTermVersionPref = (json["iTerm_version"] as? String)?.lowercased()
-        let sanitizedOpenIn = SecurityPolicies.sanitizeOpenMode((json["open_in"] as? String))
-        let themePref = json["default_theme"] as? String
-        let launchAtLogin = (json["launch_at_login"] as? Bool) ?? false
-
-        let hosts = (json["hosts"] as? [Any]) ?? []
-        let ignoreHosts = ((json["ssh_config_ignore_hosts"] as? [Any]) ?? []).compactMap { $0 as? String }
-        let ignoreKeywords = ((json["ssh_config_ignore_keywords"] as? [Any]) ?? []).compactMap { $0 as? String }
-        let showSSHConfigHosts = (json["show_ssh_config_hosts"] as? Bool) ?? true
-
-        return ShuttleConfigSnapshot(
-            terminalPref: terminalPref,
-            editorPref: editorPref,
-            iTermVersionPref: iTermVersionPref,
-            openInPref: sanitizedOpenIn,
-            themePref: themePref,
-            launchAtLogin: launchAtLogin,
-            showSSHConfigHosts: showSSHConfigHosts,
-            hosts: hosts,
-            ignoreHosts: ignoreHosts,
-            ignoreKeywords: ignoreKeywords
-        )
     }
 
     func mergeSSHHosts(
@@ -1187,9 +1223,15 @@ end CommandRun
             return
         }
 
+        let resolvedTerminalPreference = terminalPreference()
         let services = makeExecutionServices()
-        let backend = makeBackend(terminalPreference: terminalPreference(), iTermVersionPref: currentITermVersionPref)
-        let result = backend.dispatch(request: launchRequest, services: services, errorHandler: errorHandler)
+        let backend = makeBackend(terminalPreference: resolvedTerminalPreference, iTermVersionPref: currentITermVersionPref)
+        let result = RuntimeDiagnostics.measure(
+            "terminal.dispatch",
+            details: "terminal=\(resolvedTerminalPreference.rawValue) mode=\(openMode.rawValue)"
+        ) {
+            backend.dispatch(request: launchRequest, services: services, errorHandler: errorHandler)
+        }
         if let updatedVersion = result?.updatedITermVersionPref {
             currentITermVersionPref = updatedVersion
         }

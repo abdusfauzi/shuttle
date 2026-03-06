@@ -2,6 +2,7 @@
 
 - `path_hygiene_check.sh`: ensures docs/scripts do not contain hardcoded workstation paths.
 - `security_review_check.sh`: verifies key security controls remain in place (command safety, SSH quoting, mode sanitization, editor quoting patterns).
+- `runtime_diagnostics_check.sh`: verifies the optional Swift-native runtime timing hooks remain present for config loading, menu build, and terminal dispatch.
 - `url_launch_detection_check.sh`: verifies URL launch detection uses explicit scheme checks instead of raw URL initialization.
 - `launch_at_login_crash_guard.sh`: validates legacy launch-at-login code does not call unsafe LSSharedFileList pointer conversion.
 - `ghostty_launch_policy_check.sh`: verifies Ghostty uses UI-controlled fallback and direct launch policy expectations.

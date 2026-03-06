@@ -11,6 +11,7 @@ This repository is actively being modernized.
 - Platform target is now macOS `10.13+`.
 - Terminal support has been expanded and normalized.
 - Runtime migration to native Swift is in place for the active build target.
+- Optional runtime diagnostics are available for migration/performance verification (`SHUTTLE_DIAGNOSTICS=1`).
 - Full migration and operational documentation now lives under [`docs/`](./docs/).
 
 ## What Changed
@@ -69,6 +70,12 @@ Run the consolidated regression checks with:
 ./tests/regression_suite.sh
 ```
 
+Enable opt-in runtime timing diagnostics during local runs with:
+
+```bash
+SHUTTLE_DIAGNOSTICS=1 /tmp/ShuttleDerivedData/Build/Products/Debug/Shuttle.app/Contents/MacOS/Shuttle
+```
+
 Run path hygiene checks directly with:
 
 ```bash
@@ -80,6 +87,7 @@ Notes:
 - Terminal automation may require Apple Events and Accessibility permissions.
 - `./apple-scripts/compile-all.sh` expects an interactive macOS session; it returns exit code `2` when AppleScript compile services are unavailable (sandbox/headless).
 - `./tests/regression_suite.sh` returns exit code `2` when interactive automation validation is blocked by the environment.
+- `SHUTTLE_DIAGNOSTICS=1` emits opt-in timing logs for config snapshot load, menu build, and terminal dispatch without changing app behavior.
 
 ## Repository Layout
 

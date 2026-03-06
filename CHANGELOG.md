@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `tests/terminal_parity_smoke.sh` AppleScript handler dispatch harness.
 - Added `tests/terminal_parity_resource_check.sh` to validate required `.scpt` resources and backend routing markers.
 - Added `tests/path_hygiene_check.sh` to prevent regressions from hardcoded workstation paths.
+- Added `tests/runtime_diagnostics_check.sh` and opt-in runtime timing diagnostics for config snapshot load, menu build, and terminal dispatch.
 - Added `apple-scripts/compile-all.sh` canonical compiler entry point (project-root relative; exits `2` in headless environments).
 - Added `docs/plans/terminal-parity-matrix.md` cross-terminal behavior matrix and execution runbook.
 - Added `tests/compile_common_exit_code_check.sh` to validate AppleScript compiler failures propagate as non-zero exit codes.
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - AppleScript compile helper now correctly propagates non-zero compiler exit codes on failures.
 - Ghostty command dispatch now avoids `open -na` instance fan-out and uses direct fallback execution when Automation permission is unavailable.
 - URL launch detection is now strict-scheme only (`://`) to avoid misclassifying shell commands (for example `ssh ...`) as Finder URLs.
+- Added optional `SHUTTLE_DIAGNOSTICS=1` timing logs for startup/menu/dispatch performance validation without changing default runtime behavior.
 - About popup has refreshed spacing and now exposes separate links for original project and maintained fork.
 - Minimum supported macOS target is now `10.13` to support older supported environments with the Swift migration baseline.
 - @philippetev Changes to iTerm applescripts to fix issues with settings in iTerm's Preferences/General.

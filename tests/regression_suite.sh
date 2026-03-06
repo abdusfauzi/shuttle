@@ -32,6 +32,7 @@ echo
 
 echo "2) Security review checks"
 "$ROOT_DIR/tests/security_review_check.sh"
+"$ROOT_DIR/tests/runtime_diagnostics_check.sh"
 "$ROOT_DIR/tests/url_launch_detection_check.sh"
 "$ROOT_DIR/tests/launch_at_login_crash_guard.sh"
 "$ROOT_DIR/tests/ghostty_launch_policy_check.sh"
