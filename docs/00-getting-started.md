@@ -8,7 +8,8 @@ Deliver Shuttle as a fully Swift macOS app (10.13+) while preserving behavior an
 2. [02-architecture.md](./02-architecture.md)
 3. [08-implementation-phases.md](./08-implementation-phases.md)
 4. [10-testing.md](./10-testing.md)
-5. [plans/task-backlog.md](./plans/task-backlog.md)
+5. [21-security-review.md](./21-security-review.md)
+6. [plans/task-backlog.md](./plans/task-backlog.md)
 
 ## Repository Landmarks
 - `Shuttle/`: app source files, resources, scripts, plist, entitlements.

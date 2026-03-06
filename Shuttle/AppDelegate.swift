@@ -196,10 +196,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @IBAction func configure(_ sender: Any?) {
         if editorPref.range(of: "default") != nil {
-            NSWorkspace.shared.openFile(shuttleConfigFile)
+            NSWorkspace.shared.open(URL(fileURLWithPath: shuttleConfigFile))
         } else {
-            let editorCommand = "\(editorPref) \(shuttleConfigFile)"
-            let editorRepObj = "\(editorCommand)¬_¬(null)¬_¬Editing shuttle JSON¬_¬(null)¬_¬(null)"
+            guard SecurityPolicies.isSafeCommand(editorPref) else {
+                showNonFatalError(
+                    title: NSLocalizedString("Invalid editor command", comment: ""),
+                    info: NSLocalizedString("The configured editor command contains invalid characters or exceeds command limits.", comment: "")
+                )
+                return
+            }
+
+            let editorCommand = "\(editorPref) \(SecurityPolicies.shellSingleQuote(shuttleConfigFile))"
+            let editorPayload = MenuCommandPayload(
+                command: editorCommand,
+                theme: (nil as String?),
+                title: "Editing shuttle JSON",
+                window: (nil as String?),
+                fallbackTitle: "editJSONconfig"
+            )
+            let editorRepObj = editorPayload.serialized()
             let editorMenu = NSMenuItem(title: "editJSONconfig", action: #selector(openHost(_:)), keyEquivalent: "")
             editorMenu.representedObject = editorRepObj
             openHost(editorMenu)

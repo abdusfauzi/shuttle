@@ -31,6 +31,7 @@ This folder tracks the migration of Shuttle to fully native Swift on macOS 10.13
 - [18-hooks-utilities.md](./18-hooks-utilities.md)
 - [19-security-guidelines.md](./19-security-guidelines.md)
 - [20-accessibility.md](./20-accessibility.md)
+- [21-security-review.md](./21-security-review.md)
 
 ### Plans
 - [plans/README.md](./plans/README.md)

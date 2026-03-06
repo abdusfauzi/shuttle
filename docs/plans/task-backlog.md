@@ -33,13 +33,20 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 | M-006 | Cleanup and hardening: remove stale resources, finalize regression coverage, release checklist | Phase 5 | done | P2 | unassigned | 2026-03-25 | M-004, M-005 | 2026-03-06 | Legacy Objective-C runtime files and old bridging/prefix headers removed; AppleScript compile helpers are now root-relative (`./apple-scripts/compile-all.sh`) and stale duplicate script sources are removed. Added `./tests/regression_suite.sh` as a one-shot preflight/smoke/build runner with blocked-environment signaling and `./tests/path_hygiene_check.sh` for workstation-path guardrails. Updated stale XIB metadata from `AppDelegate.h` reference to `AppDelegate.swift`. Added `docs/plans/release-checklist.md` and refreshed `CHANGELOG.md` Unreleased migration notes. Hardened `tests/path_hygiene_check.sh` by replacing user-specific workstation paths with portable regex-style patterns. |
 | M-007 | Archive deprecated legacy scripts and old runtime artifacts for migration completion | Phase 5 | done | P3 | unassigned | 2026-03-20 | M-006 | 2026-03-06 | Migrated inactive legacy Warp AppleScript sources and compile helpers into `archive/legacy-scripts/`, removed legacy Warp `.scpt` outputs from active resource set, and updated compile/test policy to exclude archived scripts from active flow. |
 | M-008 | Align docs/changelog with current runtime behavior and platform baseline | Documentation | done | P2 | unassigned | 2026-03-06 | M-007 | 2026-03-06 | Updated `docs/17-integration-guide.md` and `CHANGELOG.md` to remove stale `open -na` guidance and correct target/pending entries. |
+| M-009 | Complete in-depth security review and patch identified command-safety gaps for host, editor, and terminal launches | Security | done | P1 | unassigned | 2026-03-06 | M-008 | 2026-03-06 | Added threat model, command-handling review, and remediation in Swift command safety paths. |
+| M-010 | Quarantine SSH host aliases before composing terminal commands | Security/Hardening | done | P1 | unassigned | 2026-03-06 | M-009 | 2026-03-06 | Implemented alias validation and shell-safe quoting for SSH-derived `cmd` entries to prevent command injection through host names. |
+| M-011 | Add security review automation checks to regression gate | Testing/Security | done | P2 | unassigned | 2026-03-06 | M-010 | 2026-03-06 | Added `docs/21-security-review.md`, `tests/security_review_check.sh`, and integrated the check into `tests/regression_suite.sh`. |
 
 ## Blockers and Risks
 - Terminal automation paths may fail without Apple Events and Accessibility permissions.
 - UI-driven automation for Warp/Ghostty has higher fragility than scriptable interfaces.
-- Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A refactor to a modern ServiceManagement-based helper is deferred to the next major migration cycle.
+- `~/.shuttle.path` content and SSH alias input remain editable by user; malformed values can still cause partial menu rendering failures before blocking at execution.
+- Launch-at-login remains on 10.13-compatible legacy `LSSharedFileList` APIs. A modern helper is deferred until a compatibility-safe migration path is confirmed.
 
 ## Completed Log (Newest First)
+- 2026-03-06: Completed `M-011` by adding `tests/security_review_check.sh` and wiring it into `./tests/regression_suite.sh`.
+- 2026-03-06: Completed `M-010` and `M-009` security hardening pass with host-aliased SSH commands now escaped as shell-safe single-quoted arguments and command safety checks in `Shuttle/AppServices.swift`.
+- 2026-03-06: Added `docs/21-security-review.md` to document threat model, residual risks, mitigation mapping, and verification evidence.
 - 2026-03-06: Completed `M-008` with docs/changelog alignment for Ghostty launch behavior, macOS target baseline, and stale parity-pending entries.
 - 2026-03-06: Completed `M-004` parity matrix capture in interactive macOS session; all 20 cells passed. Evidence: `tests/terminal-parity-matrix-capture-2026-03-05_23-43-13Z.md`.
 - 2026-03-06: Completed `M-006` hardening scope end-to-end (cleanup, regression suite, path hygiene, and parity evidence).
@@ -69,6 +76,9 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 
 ## Decision Log
 - 2026-03-06: Completed `M-008` to keep documentation/changelog aligned with production behavior and avoid stale operational instructions.
+- 2026-03-06: Marked `M-011` complete after source-level security check automation was added to regression suite.
+- 2026-03-06: Added `M-009` with a security posture that prioritizes shell-argument safety and deterministic command validation over compatibility shortcuts.
+- 2026-03-06: `M-010` implemented with shell-safe SSH alias quoting to avoid command injection paths introduced via user/managed `.ssh/config`.
 - 2026-03-06: Marked `M-004` complete after automated interactive matrix capture produced all-pass results in a controlled macOS session.
 - 2026-03-06: Marked `M-006` complete after parity hardening, regression harness, and path-hygiene gates reached stable pass states.
 - 2026-02-25: Canonical backlog file is `docs/plans/task-backlog.md` to centralize look-back references.
@@ -84,5 +94,5 @@ This is the canonical, easy-to-scan backlog for Shuttle migration and delivery w
 - 2026-02-26: AppleScript compile tooling is root-relative (`./apple-scripts/compile-all.sh`) to avoid workstation-specific path coupling.
 
 ## Next Review Checkpoint
-- Date: 2026-03-12
-- Focus: Validate release readiness and complete final release checklist.
+- Date: 2026-03-20
+- Focus: Complete `M-011`, verify regression suite with security gate, and confirm stability for final migration closure.

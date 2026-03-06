@@ -36,30 +36,9 @@ final class LaunchAtLoginController: NSObject {
             )?.takeRetainedValue()
         }
         super.init()
-
-        if let loginItems {
-            let context = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
-            LSSharedFileListAddObserver(
-                loginItems,
-                CFRunLoopGetMain(),
-                CFRunLoopMode.defaultMode.rawValue as CFString,
-                sharedFileListDidChange,
-                context
-            )
-        }
     }
 
     deinit {
-        if let loginItems {
-            let context = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
-            LSSharedFileListRemoveObserver(
-                loginItems,
-                CFRunLoopGetMain(),
-                CFRunLoopMode.defaultMode.rawValue as CFString,
-                sharedFileListDidChange,
-                context
-            )
-        }
     }
 
     func willLaunchAtLogin(_ itemURL: URL) -> Bool {
@@ -124,10 +103,4 @@ final class LaunchAtLoginController: NSObject {
 
         return nil
     }
-}
-
-private func sharedFileListDidChange(_ inList: LSSharedFileList, _ context: UnsafeMutableRawPointer) {
-    let controller = Unmanaged<LaunchAtLoginController>.fromOpaque(context).takeUnretainedValue()
-    controller.willChangeValue(forKey: "launchAtLogin")
-    controller.didChangeValue(forKey: "launchAtLogin")
 }

@@ -38,6 +38,7 @@ A full documentation set has been added to support implementation and migration 
 - Migration plan: [`docs/08-implementation-phases.md`](./docs/08-implementation-phases.md)
 - Testing matrix: [`docs/10-testing.md`](./docs/10-testing.md)
 - Planning backlog: [`docs/plans/task-backlog.md`](./docs/plans/task-backlog.md)
+- Security review report: [`docs/21-security-review.md`](./docs/21-security-review.md)
 
 ## Config Notes
 

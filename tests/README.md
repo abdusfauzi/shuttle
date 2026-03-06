@@ -1,6 +1,7 @@
 # Test Utilities
 
 - `path_hygiene_check.sh`: ensures docs/scripts do not contain hardcoded workstation paths.
+- `security_review_check.sh`: verifies key security controls remain in place (command safety, SSH quoting, mode sanitization, editor quoting patterns).
 - `terminal_parity_resource_check.sh`: verifies required compiled `.scpt` resources and terminal-routing markers.
 - `terminal_parity_probe.sh`: verifies preflight and installed terminal app presence/version.
 - `terminal_parity_smoke.sh`: runs preflight + AppleScript handler dispatch + GUI capability checks.

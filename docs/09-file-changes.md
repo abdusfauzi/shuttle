@@ -9,6 +9,8 @@
 - `apple-scripts/compile-all.sh` (canonical AppleScript compile entrypoint)
 - `Shuttle/shuttle.default.json`
 - `Shuttle.xcodeproj/project.pbxproj`
+- `docs/21-security-review.md` (security review and residual risk record)
+- `tests/security_review_check.sh` (security regression guard script)
 
 ## Planned Migration Map
 - Legacy Objective-C app runtime files (`main.m`, `AppDelegate.m`, `LaunchAtLoginController.{h,m}`, `AboutWindowController.{h,m}`) -> removed (completed).

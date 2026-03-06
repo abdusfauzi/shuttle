@@ -4,6 +4,41 @@ import Carbon
 enum SecurityPolicies {
     static let allowedBrowserSchemes: Set<String> = ["http", "https", "mailto"]
     static let allowedSystemSchemes: Set<String> = ["x-apple.systempreferences"]
+    static let allowedOpenModes: Set<String> = ["new", "current", "tab", "virtual"]
+    static let maxCommandLength = 8192
+    static let maxHostAliasLength = 256
+
+    static func sanitizeOpenMode(_ candidate: String?) -> String {
+        let normalized = (candidate ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return allowedOpenModes.contains(normalized) ? normalized : "tab"
+    }
+
+    static func isSafeCommand(_ command: String) -> Bool {
+        let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.utf8.count <= maxCommandLength else {
+            return false
+        }
+        return trimmed.unicodeScalars.allSatisfy { scalar in
+            scalar.value > 0 && scalar.value != 0x7f && !CharacterSet.controlCharacters.contains(scalar)
+        }
+    }
+
+    static func shellSingleQuote(_ value: String) -> String {
+        let escaped = value.replacingOccurrences(of: "'", with: "'\"'\"'")
+        return "'\(escaped)'"
+    }
+
+    static func isSafeHostAlias(_ alias: String) -> Bool {
+        let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.utf8.count <= maxHostAliasLength else {
+            return false
+        }
+        return trimmed.unicodeScalars.allSatisfy { scalar in
+            scalar.value > 0 && scalar.value != 0x7f && !CharacterSet.controlCharacters.contains(scalar)
+        }
+    }
 
     static func isAllowedURL(_ url: URL?, allowSystemSchemes: Bool = false) -> Bool {
         guard let url else {
@@ -103,6 +138,23 @@ final class ConfigService {
         return standardized
     }
 
+    private func validateReadableRegularFile(at path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: path, isDirectory: &isDirectory),
+              !isDirectory.boolValue,
+              fileManager.isReadableFile(atPath: path) else {
+            return false
+        }
+
+        guard let attributes = try? fileManager.attributesOfItem(atPath: path),
+              let size = attributes[.size] as? NSNumber,
+              size.intValue <= maxConfigFileBytes else {
+            return false
+        }
+
+        return true
+    }
+
     func needsUpdate(file: String, old: Date?) -> Bool {
         let expanded = (file as NSString).expandingTildeInPath
         if !fileManager.fileExists(atPath: expanded) {
@@ -128,6 +180,10 @@ final class ConfigService {
 
     func loadConfigSnapshot(from shuttleConfigFile: String) -> ShuttleConfigSnapshot? {
         let expandedPath = (shuttleConfigFile as NSString).expandingTildeInPath
+        guard validateReadableRegularFile(at: expandedPath) else {
+            return nil
+        }
+
         let attributes = try? fileManager.attributesOfItem(atPath: expandedPath)
         let size = attributes?[.size] as? NSNumber
         guard size == nil || size?.intValue ?? 0 <= maxConfigFileBytes else {
@@ -142,7 +198,7 @@ final class ConfigService {
         let terminalPref = normalizedTerminalPreference(json["terminal"])
         let editorPref = (json["editor"] as? String)?.lowercased() ?? "default"
         let iTermVersionPref = (json["iTerm_version"] as? String)?.lowercased()
-        let openInPref = (json["open_in"] as? String)?.lowercased() ?? "tab"
+        let sanitizedOpenIn = SecurityPolicies.sanitizeOpenMode((json["open_in"] as? String))
         let themePref = json["default_theme"] as? String
         let launchAtLogin = (json["launch_at_login"] as? Bool) ?? false
 
@@ -155,7 +211,7 @@ final class ConfigService {
             terminalPref: terminalPref,
             editorPref: editorPref,
             iTermVersionPref: iTermVersionPref,
-            openInPref: openInPref,
+            openInPref: sanitizedOpenIn,
             themePref: themePref,
             launchAtLogin: launchAtLogin,
             showSSHConfigHosts: showSSHConfigHosts,
@@ -225,11 +281,22 @@ final class ConfigService {
             }
 
             if let itemList {
-                itemList.add(["name": leaf, "cmd": "ssh \(key)"])
+                guard let command = commandForSSHHost(key: key) else {
+                    continue
+                }
+                itemList.add(["name": leaf, "cmd": command])
             }
         }
 
         hosts = shuttleHosts as? [Any] ?? []
+    }
+
+    private func commandForSSHHost(key: String) -> String? {
+        let trimmedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard SecurityPolicies.isSafeHostAlias(trimmedKey) else {
+            return nil
+        }
+        return "ssh \(SecurityPolicies.shellSingleQuote(trimmedKey))"
     }
 
     private func shouldSkipHost(name: String, ignoreHosts: [String], ignoreKeywords: [String]) -> Bool {
@@ -271,6 +338,15 @@ final class ConfigService {
 final class SSHConfigParser {
     private let fileManager: FileManager
     private let maxIncludeDepth = 16
+    private let maxIncludeBytes = 2 * 1024 * 1024
+    private let maxLineLength = 2048
+    private let wildcardCharacters: Set<Character> = ["*", "?", "["]
+
+    private static let lineRegex: NSRegularExpression = {
+        let pattern = "^(#?)[ \\t]*([^ \\t=]+)[ \\t=]+(.*)$"
+        return (try? NSRegularExpression(pattern: pattern, options: []))
+            ?? (try! NSRegularExpression(pattern: ".*", options: []))
+    }()
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -304,25 +380,37 @@ final class SSHConfigParser {
 
         let expanded = (filepath as NSString).expandingTildeInPath
         let normalizedPath = (expanded as NSString).standardizingPath
+        guard validateRegularReadableFile(path: normalizedPath) else {
+            return [:]
+        }
 
         guard visited.insert(normalizedPath).inserted else {
             NSLog("Ignoring cyclic ssh include path: \(normalizedPath)")
             return [:]
         }
 
+        guard let includeFileSize = fileSize(at: normalizedPath), includeFileSize <= maxIncludeBytes else {
+            NSLog("Ignoring oversized ssh include file at \(normalizedPath)")
+            return [:]
+        }
+
         guard let fileContents = (try? String(contentsOfFile: normalizedPath, encoding: .utf8)) else {
             return [:]
         }
-        let pattern = "^(#?)[ \\t]*([^ \\t=]+)[ \\t=]+(.*)$"
-        let regex = try? NSRegularExpression(pattern: pattern, options: [])
 
         var servers: [String: [String: String]] = [:]
         var key: String?
 
-        for line in fileContents.components(separatedBy: "\n") {
+        for line in fileContents.split(whereSeparator: \.isNewline) {
+            if line.utf8.count > maxLineLength {
+                continue
+            }
+
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard let regex,
-                  let matches = regex.firstMatch(in: trimmed, options: [], range: NSRange(location: 0, length: (trimmed as NSString).length)),
+            guard let matches = Self.lineRegex.firstMatch(
+                in: trimmed,
+                options: [],
+                range: NSRange(location: 0, length: (trimmed as NSString).length)),
                   matches.numberOfRanges == 4 else {
                 continue
             }
@@ -334,8 +422,8 @@ final class SSHConfigParser {
             }
 
             let isComment = extract(1) == "#"
-            let first = extract(2)
-            let second = extract(3)
+            let first = extract(2).lowercased()
+            let second = extract(3).trimmingCharacters(in: .whitespacesAndNewlines)
 
             if isComment, let key, first.hasPrefix("shuttle.") {
                 var hostConfig = servers[key] ?? [:]
@@ -347,20 +435,19 @@ final class SSHConfigParser {
                 continue
             }
 
-            if first == "Include" {
-                let includePath: String
-                if (second as NSString).isAbsolutePath {
-                    includePath = (second as NSString).expandingTildeInPath
-                } else {
-                    includePath = ((normalizedPath as NSString).deletingLastPathComponent as NSString).appendingPathComponent(second)
-                }
-
-                for (includeKey, includeValue) in parse(filepath: includePath, depth: depth + 1, visited: &visited) {
-                    servers[includeKey] = includeValue
+            if first == "include" {
+                let includeBaseDirectory = (normalizedPath as NSString).deletingLastPathComponent
+                let includeExpressions = second.split(whereSeparator: { $0 == " " || $0 == "\t" })
+                for expression in includeExpressions {
+                    for includePath in expandedIncludePaths(String(expression), baseDirectory: includeBaseDirectory) {
+                        for (includeKey, includeValue) in parse(filepath: includePath, depth: depth + 1, visited: &visited) {
+                            servers[includeKey] = includeValue
+                        }
+                    }
                 }
             }
 
-            if first == "Host" {
+            if first == "host" {
                 let hostAliases = second
                     .components(separatedBy: .whitespaces)
                     .filter { !$0.isEmpty }
@@ -372,6 +459,64 @@ final class SSHConfigParser {
         }
 
         return servers
+    }
+
+    private func fileSize(at path: String) -> Int? {
+        let attributes = try? fileManager.attributesOfItem(atPath: path)
+        return (attributes?[.size] as? NSNumber)?.intValue
+    }
+
+    private func validateRegularReadableFile(path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: path, isDirectory: &isDirectory),
+              !isDirectory.boolValue,
+              fileManager.isReadableFile(atPath: path) else {
+            return false
+        }
+
+        return true
+    }
+
+    private func expandedIncludePaths(_ include: String, baseDirectory: String) -> [String] {
+        guard !include.isEmpty else {
+            return []
+        }
+
+        let expanded = (include as NSString).expandingTildeInPath
+        let resolved = (expanded as NSString).isAbsolutePath ?
+            expanded :
+            ((baseDirectory as NSString).appendingPathComponent(expanded) as String)
+        let normalized = (resolved as NSString).standardizingPath
+
+        if containsWildcard(normalized) {
+            return wildcardIncludeMatches(patternPath: normalized)
+        }
+
+        guard validateRegularReadableFile(path: normalized) else {
+            return []
+        }
+
+        return [normalized]
+    }
+
+    private func containsWildcard(_ value: String) -> Bool {
+        return value.contains(where: { wildcardCharacters.contains($0) })
+    }
+
+    private func wildcardIncludeMatches(patternPath: String) -> [String] {
+        let directory = (patternPath as NSString).deletingLastPathComponent
+        let pattern = (patternPath as NSString).lastPathComponent
+        guard let entries = try? fileManager.contentsOfDirectory(atPath: directory),
+              !entries.isEmpty else {
+            return []
+        }
+
+        let matcher = NSPredicate(format: "SELF LIKE %@", pattern)
+        return entries
+            .filter { matcher.evaluate(with: $0) }
+            .map { (directory as NSString).appendingPathComponent($0) }
+            .filter { validateRegularReadableFile(path: $0) }
+            .sorted()
     }
 }
 
@@ -441,7 +586,14 @@ final class MenuBuilder {
 
             separatorSortRemoval(config["name"] as? String ?? "")
 
-            let menuRepObj = "\(menuCommand)¬_¬\(jsonStringValue(termTheme))¬_¬\(jsonStringValue(termTitle))¬_¬\(jsonStringValue(termWindow))¬_¬\(menuName)"
+            let payload = MenuCommandPayload(
+                command: menuCommand,
+                theme: termTheme,
+                title: termTitle,
+                window: termWindow,
+                fallbackTitle: menuName
+            )
+            let menuRepObj = payload.serialized()
 
             menuItem.title = menuName
             menuItem.representedObject = menuRepObj
@@ -490,14 +642,44 @@ final class MenuBuilder {
         }
     }
 
-    private func jsonStringValue(_ value: String?) -> String {
-        value ?? "(null)"
+}
+
+struct MenuCommandPayload: Codable {
+    let command: String
+    let theme: String?
+    let title: String?
+    let window: String?
+    let fallbackTitle: String
+
+    init(command: String, theme: String?, title: String?, window: String?, fallbackTitle: String) {
+        self.command = command
+        self.theme = theme
+        self.title = title
+        self.window = window
+        self.fallbackTitle = fallbackTitle
+    }
+
+    init?(serializedObject: String) {
+        guard let data = serializedObject.data(using: .utf8),
+              let payload = try? JSONDecoder().decode(MenuCommandPayload.self, from: data) else {
+            return nil
+        }
+
+        self = payload
+    }
+
+    func serialized() -> String {
+        guard let data = try? JSONEncoder().encode(self),
+              let payload = String(data: data, encoding: .utf8) else {
+            return ""
+        }
+
+        return payload
     }
 }
 
 final class TerminalRouter {
     typealias ErrorHandler = (String, String, Bool) -> Void
-
     private enum TerminalPreference: String {
         case terminal
         case iterm
@@ -520,6 +702,15 @@ final class TerminalRouter {
         let menuFallbackTitle: String
 
         init?(representedObject: String) {
+            if let payload = MenuCommandPayload(serializedObject: representedObject) {
+                command = payload.command
+                commandTheme = payload.theme ?? "(null)"
+                commandTitle = payload.title ?? "(null)"
+                commandWindow = payload.window ?? "(null)"
+                menuFallbackTitle = payload.fallbackTitle
+                return
+            }
+
             let parts = representedObject.components(separatedBy: "¬_¬")
             guard parts.count >= 5 else {
                 return nil
@@ -539,6 +730,18 @@ final class TerminalRouter {
         let title: String
         let mode: OpenMode
 
+        init?(command: String, theme: String, title: String, mode: OpenMode) {
+            let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard SecurityPolicies.isSafeCommand(trimmedCommand) else {
+                return nil
+            }
+
+            self.command = trimmedCommand
+            self.theme = theme
+            self.title = title
+            self.mode = mode
+        }
+
         var scriptParameters: [String] {
             if mode == .virtual {
                 return [command, title]
@@ -551,22 +754,21 @@ final class TerminalRouter {
                 return nil
             }
 
-            let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmedCommand.isEmpty || !trimmedCommand.contains("://") {
+            guard let components = URLComponents(string: command),
+                  let scheme = components.scheme?.lowercased(),
+                  !scheme.isEmpty else {
                 return nil
             }
 
-            guard let schemeSeparator = trimmedCommand.range(of: "://") else {
+            guard SecurityPolicies.allowedBrowserSchemes.contains(scheme) else {
                 return nil
             }
 
-            let scheme = String(trimmedCommand[..<schemeSeparator.lowerBound]).lowercased()
-            guard scheme.range(of: "^[a-z][a-z0-9+.-]*$", options: .regularExpression) != nil,
-                  SecurityPolicies.allowedBrowserSchemes.contains(scheme) else {
+            guard let commandURL = components.url else {
                 return nil
             }
 
-            return URL(string: trimmedCommand)
+            return commandURL
         }
     }
 
@@ -730,6 +932,7 @@ final class TerminalRouter {
     private(set) var currentITermVersionPref: String?
     private var openInPref = "tab"
     private var themePref: String?
+    private var scriptCache: [String: NSAppleScript] = [:]
 
     func updatePreferences(terminalPref: String, iTermVersionPref: String?, openInPref: String, themePref: String?) {
         self.terminalPref = terminalPref
@@ -747,12 +950,19 @@ final class TerminalRouter {
             return
         }
 
-        let launchRequest = TerminalLaunchRequest(
+        guard let launchRequest = TerminalLaunchRequest(
             command: menuCommand.command,
             theme: resolvedTheme(commandTheme: menuCommand.commandTheme),
             title: resolvedTitle(commandTitle: menuCommand.commandTitle, menuFallbackTitle: menuCommand.menuFallbackTitle),
             mode: openMode
-        )
+        ) else {
+            errorHandler(
+                "Blocked command",
+                NSLocalizedString("The selected command is empty or exceeds configured safety limits.", comment: ""),
+                false
+            )
+            return
+        }
 
         if let url = launchRequest.launchURL {
             guard SecurityPolicies.isAllowedURL(url) else {
@@ -806,18 +1016,20 @@ final class TerminalRouter {
 
     private func resolvedOpenMode(commandWindow: String, errorHandler: ErrorHandler) -> OpenMode? {
         if commandWindow == "(null)" {
-            let normalizedOpenIn = (openInPref == "new" || openInPref == "tab") ? openInPref : "tab"
+            let normalizedOpenIn = SecurityPolicies.sanitizeOpenMode(openInPref)
             return OpenMode(rawValue: normalizedOpenIn) ?? .tab
         }
 
-        if let openMode = OpenMode(rawValue: commandWindow) {
-            return openMode
+        let normalizedCommandWindow = commandWindow
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        guard SecurityPolicies.allowedOpenModes.contains(normalizedCommandWindow) else {
+            let errorMessage = "'\(commandWindow)' " + NSLocalizedString("is not a valid value for inTerminal. Please fix this in the JSON file", comment: "")
+            let errorInfo = NSLocalizedString("bad \"inTerminal\":\"VALUE\" in the JSON settings", comment: "")
+            errorHandler(errorMessage, errorInfo, false)
+            return nil
         }
-
-        let errorMessage = "'\(commandWindow)' " + NSLocalizedString("is not a valid value for inTerminal. Please fix this in the JSON file", comment: "")
-        let errorInfo = NSLocalizedString("bad \"inTerminal\":\"VALUE\" in the JSON settings", comment: "")
-        errorHandler(errorMessage, errorInfo, false)
-        return nil
+        return OpenMode(rawValue: normalizedCommandWindow)
     }
 
     private func makeBackend(terminalPreference: TerminalPreference, iTermVersionPref: String?) -> TerminalBackend {
@@ -871,9 +1083,7 @@ final class TerminalRouter {
             return
         }
 
-        let pathURL = URL(fileURLWithPath: scriptPath)
-        var appleScriptCreationError: NSDictionary?
-        guard let appleScript = NSAppleScript(contentsOf: pathURL, error: &appleScriptCreationError) else {
+        guard let appleScript = cachedScript(at: scriptPath) else {
             return
         }
 
@@ -911,6 +1121,24 @@ final class TerminalRouter {
 
             _ = appleScript.executeAppleEvent(containerEvent, error: nil)
         }
+    }
+
+    private func cachedScript(at path: String) -> NSAppleScript? {
+        if let cached = scriptCache[path] {
+            return cached
+        }
+
+        let pathURL = URL(fileURLWithPath: path)
+        var appleScriptCreationError: NSDictionary?
+        guard let appleScript = NSAppleScript(contentsOf: pathURL, error: &appleScriptCreationError) else {
+            if let errorDetails = appleScriptCreationError {
+                NSLog("Failed to load AppleScript at %@: %@", path, errorDetails)
+            }
+            return nil
+        }
+
+        scriptCache[path] = appleScript
+        return appleScript
     }
 
     private func runCommandInUIControlledTerminal(
@@ -964,6 +1192,8 @@ final class TerminalRouter {
         var escapedValue = value.replacingOccurrences(of: "\\", with: "\\\\")
         escapedValue = escapedValue.replacingOccurrences(of: "\"", with: "\\\"")
         escapedValue = escapedValue.replacingOccurrences(of: "\n", with: "\\n")
+        escapedValue = escapedValue.replacingOccurrences(of: "\r", with: "\\r")
+        escapedValue = escapedValue.replacingOccurrences(of: "\t", with: "\\t")
         return escapedValue
     }
 
