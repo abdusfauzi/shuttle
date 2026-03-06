@@ -30,8 +30,23 @@ grep -q "window?.center()" "$SETTINGS_CONTROLLER" || {
     exit 1
 }
 
-grep -q "About Shuttle" "$SETTINGS_CONTROLLER" || {
-    echo "FAIL: About section missing from Settings window" >&2
+grep -q "NSTabView()" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Settings window should use a native tab view" >&2
+    exit 1
+}
+
+grep -q 'identifier: "permissions"' "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Permissions tab missing from Settings window" >&2
+    exit 1
+}
+
+grep -q 'identifier: "config"' "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Config tab missing from Settings window" >&2
+    exit 1
+}
+
+grep -q 'identifier: "about"' "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: About tab missing from Settings window" >&2
     exit 1
 }
 

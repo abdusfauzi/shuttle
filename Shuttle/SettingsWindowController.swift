@@ -34,6 +34,7 @@ struct SettingsWindowState {
 final class SettingsWindowController: NSWindowController {
     weak var settingsDelegate: SettingsWindowControllerDelegate?
 
+    private let tabView = NSTabView()
     private let summaryLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 13))
     private let accessibilityStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
     private let automationStatusLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 12))
@@ -83,40 +84,23 @@ final class SettingsWindowController: NSWindowController {
             return
         }
 
-        let rootStack = NSStackView()
-        rootStack.orientation = .vertical
-        rootStack.alignment = .leading
-        rootStack.distribution = .fill
-        rootStack.spacing = 18
-        rootStack.translatesAutoresizingMaskIntoConstraints = false
+        tabView.tabViewType = .topTabsBezelBorder
+        tabView.translatesAutoresizingMaskIntoConstraints = false
+        tabView.addTabViewItem(makePermissionsTab())
+        tabView.addTabViewItem(makeConfigTab())
+        tabView.addTabViewItem(makeAboutTab())
 
-        let headerTitle = SettingsWindowController.makeHeadlineLabel(NSLocalizedString("Shuttle Settings", comment: ""))
-        let headerSubtitle = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 13))
-        headerSubtitle.stringValue = NSLocalizedString("Permissions, config location, and app metadata are managed here.", comment: "")
-
-        let headerStack = NSStackView(views: [headerTitle, headerSubtitle])
-        headerStack.orientation = .vertical
-        headerStack.alignment = .leading
-        headerStack.spacing = 6
-
-        rootStack.addArrangedSubview(headerStack)
-        rootStack.addArrangedSubview(makePermissionsSection())
-        rootStack.addArrangedSubview(makeConfigSection())
-        rootStack.addArrangedSubview(makeAboutSection())
-
-        contentView.addSubview(rootStack)
+        contentView.addSubview(tabView)
 
         NSLayoutConstraint.activate([
-            rootStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            rootStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            rootStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
-            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -24)
+            tabView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            tabView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            tabView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            tabView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
     }
 
     private func makePermissionsSection() -> NSView {
-        let container = makeSectionContainer(title: NSLocalizedString("Permissions", comment: ""))
-
         let accessibilityRow = makeActionRow(
             title: NSLocalizedString("Accessibility", comment: ""),
             statusLabel: accessibilityStatusLabel,
@@ -146,13 +130,14 @@ final class SettingsWindowController: NSWindowController {
         body.alignment = .leading
         body.spacing = 12
 
-        container.addArrangedSubview(body)
-        return container
+        return makeTabContent(
+            title: NSLocalizedString("Permissions", comment: ""),
+            subtitle: NSLocalizedString("Grant the permissions Shuttle needs to open hosts reliably.", comment: ""),
+            body: body
+        )
     }
 
     private func makeConfigSection() -> NSView {
-        let container = makeSectionContainer(title: NSLocalizedString("Config", comment: ""))
-
         let sourceRow = makeInfoRow(title: NSLocalizedString("Source", comment: ""), valueLabel: configSourceLabel)
         let pathRow = makeInfoRow(title: NSLocalizedString("Path", comment: ""), valueLabel: configPathLabel)
         let fileStatusRow = makeInfoRow(title: NSLocalizedString("File", comment: ""), valueLabel: configStatusLabel)
@@ -188,13 +173,14 @@ final class SettingsWindowController: NSWindowController {
         body.alignment = .leading
         body.spacing = 12
 
-        container.addArrangedSubview(body)
-        return container
+        return makeTabContent(
+            title: NSLocalizedString("Config", comment: ""),
+            subtitle: NSLocalizedString("Choose where Shuttle reads its config and manage local or iCloud copies.", comment: ""),
+            body: body
+        )
     }
 
     private func makeAboutSection() -> NSView {
-        let container = makeSectionContainer(title: NSLocalizedString("About Shuttle", comment: ""))
-
         let homepageButton = makeButton(title: NSLocalizedString("Original Author", comment: ""), action: #selector(openOriginalHomepage(_:)))
         let forkButton = makeButton(title: NSLocalizedString("Project Fork", comment: ""), action: #selector(openForkHomepage(_:)))
         let buttonRow = NSStackView(views: [homepageButton, forkButton])
@@ -207,16 +193,58 @@ final class SettingsWindowController: NSWindowController {
         body.alignment = .leading
         body.spacing = 10
 
-        container.addArrangedSubview(body)
-        return container
+        return makeTabContent(
+            title: NSLocalizedString("About Shuttle", comment: ""),
+            subtitle: NSLocalizedString("Version, ownership, and project links for the current build.", comment: ""),
+            body: body
+        )
     }
 
-    private func makeSectionContainer(title: String) -> NSStackView {
-        let titleLabel = SettingsWindowController.makeSectionLabel(title)
-        let container = NSStackView(views: [titleLabel])
-        container.orientation = .vertical
-        container.alignment = .leading
-        container.spacing = 10
+    private func makePermissionsTab() -> NSTabViewItem {
+        let item = NSTabViewItem(identifier: "permissions")
+        item.label = NSLocalizedString("Permissions", comment: "")
+        item.view = makePermissionsSection()
+        return item
+    }
+
+    private func makeConfigTab() -> NSTabViewItem {
+        let item = NSTabViewItem(identifier: "config")
+        item.label = NSLocalizedString("Config", comment: "")
+        item.view = makeConfigSection()
+        return item
+    }
+
+    private func makeAboutTab() -> NSTabViewItem {
+        let item = NSTabViewItem(identifier: "about")
+        item.label = NSLocalizedString("About", comment: "")
+        item.view = makeAboutSection()
+        return item
+    }
+
+    private func makeTabContent(title: String, subtitle: String, body: NSView) -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let titleLabel = SettingsWindowController.makeHeadlineLabel(title)
+        let subtitleLabel = SettingsWindowController.makeWrappingLabel(font: NSFont.systemFont(ofSize: 13))
+        subtitleLabel.stringValue = subtitle
+
+        let stack = NSStackView(views: [titleLabel, subtitleLabel, body])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.distribution = .fill
+        stack.spacing = 18
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -24),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 24),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -24)
+        ])
+
         return container
     }
 
