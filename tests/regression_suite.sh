@@ -45,6 +45,8 @@ echo "3) Settings and config flow checks"
 "$ROOT_DIR/tests/settings_window_flow_check.sh"
 "$ROOT_DIR/tests/config_location_resolution_check.sh"
 "$ROOT_DIR/tests/preflight_permissions_guard.sh"
+"$ROOT_DIR/tests/accessibility_prompt_check.sh"
+"$ROOT_DIR/tests/local_install_signing_check.sh"
 echo
 
 echo "4) AppleScript compile (optional)"

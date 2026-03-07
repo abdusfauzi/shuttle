@@ -336,6 +336,7 @@ final class SettingsWindowController: NSWindowController {
         if state.requiresAccessibility && !state.accessibilityGranted {
             missing.append(NSLocalizedString("Accessibility permission is required.", comment: ""))
             missing.append(NSLocalizedString("If you just enabled it in System Settings, relaunch Shuttle to refresh macOS trust.", comment: ""))
+            missing.append(NSLocalizedString("If Shuttle was previously installed from an older ad-hoc build, remove it from Accessibility and add /Applications/Shuttle.app again.", comment: ""))
         }
         if state.requiresAutomation && !state.automationGranted {
             missing.append(NSLocalizedString("Automation permission is required (System Events).", comment: ""))

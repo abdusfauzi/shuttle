@@ -85,6 +85,12 @@ Run the consolidated regression checks with:
 ./tests/regression_suite.sh
 ```
 
+Build, developer-sign when a local signing identity is available, install to `/Applications/Shuttle.app`, and relaunch with:
+
+```bash
+./scripts/install_local_app.sh
+```
+
 Run real terminal-launch parity checks only when you explicitly want interactive validation:
 
 ```bash
@@ -107,7 +113,9 @@ Run path hygiene checks directly with:
 Notes:
 - In restricted environments, use `-derivedDataPath` (as shown) to avoid permission issues with default Xcode paths.
 - Terminal automation may require Apple Events and Accessibility permissions.
+- For stable Accessibility trust on local installs, prefer `./scripts/install_local_app.sh` over copying an ad-hoc build bundle by hand.
 - On first run, incomplete setup now opens the Settings window with direct actions for Accessibility, Automation, and config selection.
+- If Shuttle was previously granted Accessibility as an older ad-hoc build, remove it from Accessibility and add `/Applications/Shuttle.app` again after installing a developer-signed build.
 - Terminal parity smoke/matrix scripts are non-invasive by default; real terminal launches now require explicit interactive opt-in flags.
 - `./apple-scripts/compile-all.sh` expects an interactive macOS session; it returns exit code `2` when AppleScript compile services are unavailable (sandbox/headless).
 - `./tests/regression_suite.sh` returns exit code `2` when interactive automation validation is blocked by the environment.
@@ -118,6 +126,7 @@ Notes:
 - [`Shuttle/`](./Shuttle/) - App source, resources, plist, entitlements
 - [`Shuttle.xcodeproj/`](./Shuttle.xcodeproj/) - Xcode project
 - [`apple-scripts/`](./apple-scripts/) - AppleScript source/reference artifacts and compile helpers (`compile-all.sh` for compatibility checks)
+- [`scripts/`](./scripts/) - Local build/install helpers, including developer-signed installation to `/Applications`
 - [`tests/`](./tests/) - Sample config/test fixtures
 - [`docs/`](./docs/) - Core and operational documentation
 

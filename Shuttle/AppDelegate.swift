@@ -1,4 +1,5 @@
 import Cocoa
+import ApplicationServices
 
 @objc(AppDelegate)
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -278,6 +279,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func openAccessibilitySettings() {
+        requestAccessibilityTrustPrompt()
         openSystemSettings(urlStrings: [
             "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
             "x-apple.systempreferences:com.apple.preference.security?Privacy"
@@ -302,6 +304,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 return
             }
         }
+    }
+
+    private func requestAccessibilityTrustPrompt() {
+        let promptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        let options = [promptKey: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
     }
 
     private func replaceConfig(with sourcePath: String) throws {

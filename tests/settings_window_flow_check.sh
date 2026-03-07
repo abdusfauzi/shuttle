@@ -60,6 +60,11 @@ grep -q "Relaunch Shuttle" "$SETTINGS_CONTROLLER" || {
     exit 1
 }
 
+grep -q "older ad-hoc build" "$SETTINGS_CONTROLLER" || {
+    echo "FAIL: Permissions tab does not explain Accessibility recovery after ad-hoc installs" >&2
+    exit 1
+}
+
 grep -q "Not currently required for the selected terminal." "$SETTINGS_CONTROLLER" || {
     echo "FAIL: Permissions tab does not describe optional permission state" >&2
     exit 1
