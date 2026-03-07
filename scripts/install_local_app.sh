@@ -9,31 +9,32 @@ APP_BUILD_PATH="$DERIVED_DATA_PATH/Build/Products/$BUILD_CONFIGURATION/Shuttle.a
 ENTITLEMENTS_PATH="$ROOT_DIR/Shuttle/Shuttle.entitlements"
 
 select_signing_identity() {
-    local apple_dev=""
     local developer_id=""
+    local apple_dev=""
 
     while read -r hash rest; do
         [[ -n "${hash:-}" ]] || continue
         case "$rest" in
-        *"Apple Development:"*)
-            apple_dev="$hash"
-            break
-            ;;
         *"Developer ID Application:"*)
             if [[ -z "$developer_id" ]]; then
                 developer_id="$hash"
             fi
             ;;
+        *"Apple Development:"*)
+            if [[ -z "$apple_dev" ]]; then
+                apple_dev="$hash"
+            fi
+            ;;
         esac
     done < <(security find-identity -v -p codesigning 2>/dev/null | awk '/Apple Development:|Developer ID Application:/ {print $2, $0}')
 
-    if [[ -n "$apple_dev" ]]; then
-        printf '%s\n' "$apple_dev"
+    if [[ -n "$developer_id" ]]; then
+        printf '%s\n' "$developer_id"
         return 0
     fi
 
-    if [[ -n "$developer_id" ]]; then
-        printf '%s\n' "$developer_id"
+    if [[ -n "$apple_dev" ]]; then
+        printf '%s\n' "$apple_dev"
         return 0
     fi
 
